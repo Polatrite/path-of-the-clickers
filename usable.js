@@ -1,0 +1,3 @@
+var Usable = function() {
+
+}

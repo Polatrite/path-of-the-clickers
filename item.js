@@ -22,3 +22,4 @@ Item.prototype.move = function(source, destination) {
 	var sourceElem = $('#item' + this.uid);
 	var destinationElem = $('#item' + this.uid); //TODO
 }
+

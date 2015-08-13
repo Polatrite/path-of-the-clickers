@@ -1,17 +1,18 @@
-var app = angular.module('app', []);
+var app = angular.module('app', ['objectEditor']);
 
 app.controller("MainCtrl", ['$scope', '$interval', '$timeout', function(scope, $interval, $timeout) {
 	angular.extend(scope, {
 		player: null,
 		inventory: [],
 		monsters: [],
-		squads: []
+		squads: [],
+        debugObjects: []
 	});
 	
 	angular.extend(scope, {
 		start: function() {
 			scope.player = preloadedPlayer;
-			
+			scope.debugObjects = [scope.player, scope.inventory, scope.monsters];
 		}
 	});
 	
@@ -123,6 +124,9 @@ preloadedInventory[13] = new Item({
 
 var preloadedPlayer = {
     inventory: preloadedInventory,
+    testFunc: function() {
+        console.log("Output!");
+    },
     minions: [{
         name: "Angel Warrior",
         description: "She's an angel warrior, obviously.",

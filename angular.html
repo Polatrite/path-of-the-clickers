@@ -14,11 +14,14 @@
 	<script src="lib/fastclick.js" text="type/javascript"></script>
 	<script src="lib/interact.js" text="type/javascript"></script>
 	<script src="lib/bootstrap/js/bootstrap.js" text="type/javascript"></script>
+	<script src="lib/object-editor-master/object-editor.js" text="type/javascript"></script>
 
 	<script src="lib/savefile.js" text="type/javascript"></script>
 	<script src="lib/drag-and-drop-inventory/inventory.js" text="type/javascript"></script>
 
     <script src="item.js" text="type/javascript"></script>
+    <script src="affix.js" text="type/javascript"></script>
+    <script src="utilities.js" text="type/javascript"></script>
     <script src="monster.js" text="type/javascript"></script>
 	<script src="angular.js" text="type/javascript"></script>
 
@@ -26,6 +29,7 @@
 	<link  href="lib/bootstrap/css/bootstrap-theme.slate.css" rel="stylesheet">
 	<link  href="lib/bootstrap/css/bootstrap.override.css" rel="stylesheet">
 	<link  href="lib/drag-and-drop-inventory/drag-styles.css" rel="stylesheet">
+	<link  href="lib/object-editor-master/object-editor.css" rel="stylesheet">
 
 	<link  href="css/styles.css" rel="stylesheet">
 	<link  href="css/tooltips.css" rel="stylesheet">
@@ -168,7 +172,14 @@ window.addEventListener('load', function() {
 	<div class="col-md-3">
 	    <h1>Maps</h1>
 	</div>
+</div>
+
+<div class="row">
 	
+	<div class="col-md-3" ng-repeat="obj in debugObjects">
+		<h1>Debugging {{obj.name}} {{obj.length}}</h1>
+		<object-editor object='obj'></object-editor>
+	</div>
 </div>
 
 </body>

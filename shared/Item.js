@@ -1,3 +1,5 @@
+var _ = require('underscore');
+
 var uidGenerator = {
 	index: 1000000,
 	generate: function(prefix) {
@@ -23,3 +25,4 @@ Item.prototype.move = function(source, destination) {
 	var destinationElem = $('#item' + this.uid); //TODO
 }
 
+module.exports = Item;

@@ -1,84 +1,67 @@
-var app = angular.module('app', ['objectEditor']);
+var _ = require('underscore');
+var Item = require('./Item.js');
+var Player = require('./Player.js');
+var AffixType = require('./AffixType.js');
+var StatRange = require('./StatRange.js');
 
-app.controller("MainCtrl", ['$scope', '$interval', '$timeout', function(scope, $interval, $timeout) {
-	angular.extend(scope, {
-		player: null,
-		inventory: [],
-		monsters: [],
-		squads: [],
-        debugObjects: []
-	});
-	
-	angular.extend(scope, {
-		start: function() {
-			scope.player = preloadedPlayer;
-			scope.debugObjects = [scope.player, scope.inventory, scope.monsters];
-		}
-	});
-	
-	scope.start();
-}]);
+var data = {};
 
-app.directive('slot', function () {
-		return {
-				restrict: 'A',
-				link: function (scope, element, attrs) {
-						element.on('click', function () {
-								if (!window.getSelection().toString()) {
-										// Required for mobile Safari
-										this.setSelectionRange(0, this.value.length)
-								}
-						});
-				}
-		};
-});
-
-app.directive('selectOnClick', function () {
-		return {
-				restrict: 'A',
-				link: function (scope, element, attrs) {
-						element.on('click', function () {
-								if (!window.getSelection().toString()) {
-										// Required for mobile Safari
-										this.setSelectionRange(0, this.value.length)
-								}
-						});
-				}
-		};
-});
-
-
-
-function initialize() {
-    setTimeout(function() {
-        refreshSortableInventoryList();
-        
-        var item = new Item();
-        item.name = "Frost Sword";
-        item.cssClass = "inventory-item sword1";
-        item.itemType = "item weapon sword";
-        
-        player.minions[0].items[0].item = item;
-
-        updateMinionItems();
-    }, 200);
+data.primaryAffixes = {
+	attack: [
+		new AffixType({
+			name: "Damage",
+			type: "primary",
+			statRanges: [
+				new StatRange({
+					stat: "attack",
+					min: 3,
+					max: 8
+				})
+			],
+			levelMin: 1,
+			levelMax: 8
+		}),
+		new AffixType({
+			name: "Damage+",
+			type: "primary",
+			statRanges: [
+				new StatRange({
+					stat: "attack",
+					min: 8,
+					max: 14
+				})
+			],
+			levelMin: 1,
+			levelMax: 8
+		}),
+		new AffixType({
+			name: "Damage++",
+			type: "primary",
+			statRanges: [
+				new StatRange({
+					stat: "attack",
+					min: 15,
+					max: 23
+				})
+			],
+			levelMin: 1,
+			levelMax: 8
+		}),
+		new AffixType({
+			name: "Damage+++",
+			type: "primary",
+			statRanges: [
+				new StatRange({
+					stat: "attack",
+					min: 25,
+					max: 35
+				})
+			],
+			levelMin: 1,
+			levelMax: 8
+		}),
+	]
 }
-
-function updateMinionItems() {
-    $("[apply-class]").addClass(function(index, currentClass) {
-        $(this).addClass($(this).attr('apply-class'));
-    });
-    $('.inventory-item').tooltip({
-        html: true
-    });
-
-    _.each(player.minions, function(minion) {
-        _.each(minion.items, function(item) {
-            //TODO
-        });
-    });
-}
-
 
 function createInventory() {
     var slots = _.range(0, 24);
@@ -103,7 +86,7 @@ preloadedInventory[4] = new Item({
     itemType: 'item food',
     name: 'Carrot',
     description: '',
-    tooltip: "Warning: not a dildo"
+    tooltip: "A wild carrot"
 });
 
 preloadedInventory[6] = new Item({
@@ -111,7 +94,7 @@ preloadedInventory[6] = new Item({
     itemType: 'item food',
     name: 'Carrot',
     description: '',
-    tooltip: "Warning: not a dildo"
+    tooltip: "A wild carrot"
 });
 
 preloadedInventory[13] = new Item({
@@ -122,11 +105,8 @@ preloadedInventory[13] = new Item({
     tooltip: "DURRR! AXE!"
 });
 
-var preloadedPlayer = {
+data.preloadedPlayer = new Player({
     inventory: preloadedInventory,
-    testFunc: function() {
-        console.log("Output!");
-    },
     minions: [{
         name: "Angel Warrior",
         description: "She's an angel warrior, obviously.",
@@ -203,4 +183,6 @@ var preloadedPlayer = {
     workers: 3859,
     workersUsed: 2811,
     money: 343417831.38
-};
+});
+
+module.exports = data;

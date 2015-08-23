@@ -21,6 +21,7 @@
 	<link  href="lib/bootstrap/css/bootstrap.override.css" rel="stylesheet">
 	<link  href="lib/drag-and-drop-inventory/drag-styles.css" rel="stylesheet">
 	<link  href="lib/object-editor-master/object-editor.css" rel="stylesheet">
+	<link  href="lib/SupportlikDnD/main.css" rel="stylesheet">
 
 	<link  href="css/styles.css" rel="stylesheet">
 	<link  href="lib/chat-box/chat-box.css" rel="stylesheet">
@@ -114,6 +115,14 @@ window.addEventListener('load', function() {
                 <div class="inventory-cell"></div>
             </div>
         </div>-->
+
+    <ng-inventory inventory="inv" rows="r1" columns="c1"></ng-inventory>
+    Chest
+    <ng-inventory inventory="chest" rows="2" columns="5"></ng-inventory>
+    Only not Enchanted Weapons:
+    <ng-inventory inventory="weapon_not_enchanted" rows="2" columns="2"></ng-inventory>
+    Any Enchanted Weapon, no Axe:
+    <ng-inventory inventory="weapon_enchanted" rows="2" columns="2"></ng-inventory>
 
         <div class="inventory-table" id="personal-inventory">
             <div class="inventory-cell" ng-repeat="item in player.inventory track by $index">

@@ -4,34 +4,26 @@
 	<title>Tamers of the Otherworld</title>
 	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
 	
-	<script src="lib/quick-function.js" text="type/javascript"></script>
-	<script src="lib/commafy.js" text="type/javascript"></script>
-	<script src="lib/underscore.min.js" text="type/javascript"></script>
-	<script src="lib/jquery-2.1.1.js" text="type/javascript"></script>
-	<script src="lib/jquery-ui.min.js" text="type/javascript"></script>
-	<script src="bower_components/angular/angular.js" text="type/javascript"></script>
-	<script src="bower_components/angular-ecs/dist/angular-ecs.js" text="type/javascript"></script>
+	<!--<script src="lib/jquery-2.1.1.js" text="type/javascript"></script>
+	<script src="lib/jquery-ui.min.js" text="type/javascript"></script>-->
 	<script src="lib/fastclick.js" text="type/javascript"></script>
 	<script src="lib/interact.js" text="type/javascript"></script>
-	<script src="lib/bootstrap/js/bootstrap.js" text="type/javascript"></script>
-	<script src="lib/object-editor-master/object-editor.js" text="type/javascript"></script>
+	<!--<script src="lib/bootstrap/js/bootstrap.js" text="type/javascript"></script>-->
+	<!--<script src="lib/object-editor-master/object-editor.js" text="type/javascript"></script>-->
 
-	<script src="lib/savefile.js" text="type/javascript"></script>
-	<script src="lib/drag-and-drop-inventory/inventory.js" text="type/javascript"></script>
+	<!--<script src="lib/savefile.js" text="type/javascript"></script>-->
+	<!--<script src="lib/drag-and-drop-inventory/inventory.js" text="type/javascript"></script>-->
 
-    <script src="item.js" text="type/javascript"></script>
-    <script src="affix.js" text="type/javascript"></script>
-    <script src="utilities.js" text="type/javascript"></script>
-    <script src="monster.js" text="type/javascript"></script>
-	<script src="angular.js" text="type/javascript"></script>
+	<script src="compiled.js" text="type/javascript"></script>
 
-	<link  href="lib/jquery-ui.css" rel="stylesheet">
+	<!--<link  href="lib/jquery-ui.css" rel="stylesheet">-->
 	<link  href="lib/bootstrap/css/bootstrap-theme.slate.css" rel="stylesheet">
 	<link  href="lib/bootstrap/css/bootstrap.override.css" rel="stylesheet">
 	<link  href="lib/drag-and-drop-inventory/drag-styles.css" rel="stylesheet">
 	<link  href="lib/object-editor-master/object-editor.css" rel="stylesheet">
 
 	<link  href="css/styles.css" rel="stylesheet">
+	<link  href="lib/chat-box/chat-box.css" rel="stylesheet">
 	<link  href="css/tooltips.css" rel="stylesheet">
 
 	<script text="type/javascript">
@@ -43,7 +35,7 @@ window.addEventListener('load', function() {
 	</script>
 
 </head>
-<body ng-controller="MainCtrl" class="container-fluid">
+<body ng-controller="MainCtrl" class="container-fluid" style="max-height: 100vh;">
 
 <!-- Modal -->
 <div class="modal fade" id="saveLoadModal" tabindex="-1" role="dialog" aria-labelledby="saveLoadModalLabel" aria-hidden="true">
@@ -171,6 +163,20 @@ window.addEventListener('load', function() {
 	<!-- MAPS, ADVENTURES -->
 	<div class="col-md-3">
 	    <h1>Maps</h1>
+	    <div class="chat-box" ng-controller="ChatCtrl">
+		    <input type="checkbox" />
+		    <label data-expanded="Close Chatbox" data-collapsed="Open Chatbox"></label>
+		    <div class="chat-box-content">
+		        <div class="conversation">
+		            <ul>
+		            	<li ng-repeat="message in messages track by $index" id="post-{{ ::$index }}" scroll-to-last="post-{{ ::$index }}">{{message}}</li>
+		            </ul>
+		        </div>
+		        <form ng-submit="sendMessage();">
+			        <input type="text" ng-model="messageText" placeholder="Enter Message" />
+		        </form>
+		    </div>
+		</div>
 	</div>
 </div>
 

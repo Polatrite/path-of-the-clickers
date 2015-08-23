@@ -35,7 +35,7 @@ Affix.prototype.generate = function() {
 				max: 8,
 				spreadMinMax: function() {
 					var spread = {
-						min: 
+						min: 0
 					}
 				}
 			})

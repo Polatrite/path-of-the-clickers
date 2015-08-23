@@ -80,56 +80,14 @@ window.addEventListener('load', function() {
     <!-- INVENTORY, SKILLS, CURRENCY -->
 	<div class="col-md-3">
 	    <h1>Inventory</h1>
-        <!--<div class="inventory-table" id="personal-inventory">
-            <div class="inventory-row">
-                <div class="inventory-cell">
-                </div>
-                <div class="inventory-cell">
-                    <div class="inventory-item sword1" data-item-type="item weapon sword"></div>
-                </div>
-            </div>
-            <div class="inventory-row">
-                <div class="inventory-cell">
-                    <div class="inventory-item carrot" data-item-type="food"></div>
-                </div>
-                <div class="inventory-cell">
-                    <div class="inventory-item meat1" data-item-type="food cookable"></div>
-                </div>
-                <div class="inventory-cell">
-                    <div class="inventory-item meat1" data-item-type="food cookable"></div>
-                </div>
-                <div class="inventory-cell"></div>
-                <div class="inventory-cell"></div>
-            </div>
-            <div class="inventory-row">
-                <div class="inventory-cell">
-                    <div class="inventory-item axe1" title="<h4>Flaming Battle-Axe of the Goat</h4><br><span style='color:red;'>Flaming</span> <span class='pull-right'>35.4 DPS</span>" data-item-type="item weapon axe"></div>    
-                </div>
-                <div class="inventory-cell">
-                    <div class="inventory-item talisman1" data-item-type="item weapon talisman"></div>    
-                </div>
-                <div class="inventory-cell">
-                    <div class="inventory-item grape" data-item-type="food"></div>
-                </div>
-                <div class="inventory-cell"></div>
-                <div class="inventory-cell"></div>
-            </div>
-        </div>-->
 
-    <ng-inventory inventory="inv" rows="r1" columns="c1"></ng-inventory>
-    Chest
-    <ng-inventory inventory="chest" rows="2" columns="5"></ng-inventory>
-    Only not Enchanted Weapons:
-    <ng-inventory inventory="weapon_not_enchanted" rows="2" columns="2"></ng-inventory>
-    Any Enchanted Weapon, no Axe:
-    <ng-inventory inventory="weapon_enchanted" rows="2" columns="2"></ng-inventory>
-
-        <div class="inventory-table" id="personal-inventory">
-            <div class="inventory-cell" ng-repeat="item in player.inventory track by $index">
-                <div class="inventory-item" ng-class="item.cssClass" ng-show="item != null" data-item-type="{{item.itemType}}" title="{{item.tooltip}}"></div>
-            </div>
-        </div>
-        
+	    <ng-inventory inventory="inv" rows="r1" columns="c1"></ng-inventory>
+	    Chest
+	    <ng-inventory inventory="chest" rows="2" columns="5"></ng-inventory>
+	    Only not Enchanted Weapons:
+	    <ng-inventory inventory="weapon_not_enchanted" rows="2" columns="2"></ng-inventory>
+	    Any Enchanted Weapon, no Axe:
+	    <ng-inventory inventory="weapon_enchanted" rows="2" columns="2"></ng-inventory>
 
 
         <hr>
@@ -156,14 +114,8 @@ window.addEventListener('load', function() {
 				    {{ item.name }}
 				</div>
 
-                <div class="inventory-row">
-				    <span style="display: flex;">
-                        <div class="inventory-cell" data-item-filter-whitelist="{{itemtemplate.itemType}}" ng-repeat="itemtemplate in minion.items track by $index">
-                            <div ng-class="itemtemplate.placeholderCssClass" ng-hide="itemtemplate.item != null"></div>
-                            <div class="inventory-item" ng-class="itemtemplate.item.cssClass" ng-show="itemtemplate.item != null" data-item-type="{{itemtemplate.item.itemType}}" title="{{itemtemplate.item.tooltip}}"></div>
-                        </div>
-				    </span>
-				</div>
+			    <ng-inventory inventory="minion_inventory" rows="1" columns="3"></ng-inventory>
+
 				<hr>
 			</div>
 		</div>
@@ -174,7 +126,7 @@ window.addEventListener('load', function() {
 	    <h1>Maps</h1>
 	    <div class="chat-box" ng-controller="ChatCtrl">
 		    <input type="checkbox" />
-		    <label data-expanded="Close Chatbox" data-collapsed="Open Chatbox"></label>
+		    <label data-expanded="({{ messages.length }}) Close Chatbox" data-collapsed="({{ messages.length }}) Open Chatbox"></label>
 		    <div class="chat-box-content">
 		        <div class="conversation">
 		            <ul>

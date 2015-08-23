@@ -9,9 +9,44 @@ var AffixType = require('./AffixType.js');
 var StatRange = require('./StatRange.js');
 var data = require('./data.js');
 
+var url = window.location.protocol + "//" + window.location.host + ":8080";
+console.log("Socket.io URL set to " + url);
+var socket = null;
+
+
+
+
 var app = angular.module('app', []);
 
-app.controller("MainCtrl", ['$scope', '$interval', '$timeout', function(scope, $interval, $timeout) {
+app.factory('socket', function($rootScope) {
+	var socket = require('socket.io-client')(url);
+	console.log("Initializing socket.IO client");
+	return {
+		on: function(eventName, callback) {
+			socket.on(eventName, function() {
+				var args = arguments;
+				$rootScope.$apply(function() {
+					callback.apply(socket, args);
+				});
+			});
+		},
+		emit: function(eventName, data, callback) {
+			socket.emit(eventName, data, function() {
+				var args = arguments;
+				$rootScope.$apply(function() {
+					if (callback) {
+						callback.apply(socket, args);
+					}
+				});
+			})
+		},
+		socket: function() {
+			return socket;
+		}
+	};
+});
+
+app.controller("MainCtrl", ['$scope', '$interval', '$timeout', 'socket', function(scope, $interval, $timeout, socket) {
 	angular.extend(scope, {
 		player: null,
 		inventory: [],
@@ -28,7 +63,34 @@ app.controller("MainCtrl", ['$scope', '$interval', '$timeout', function(scope, $
 		}
 	});
 	
+	
+	
 	scope.start();
+}]);
+
+app.controller("ChatCtrl", ['$scope', 'socket', function(scope, socket) {
+    scope.messages = [];
+    for(var i = 0; i <= 25; i++) {
+    	scope.messages.push(Math.random());
+    }
+    scope.sendMessage = function() {
+    	var message = scope.messageText;
+        socket.emit('new message', message);
+        scope.messageText = "";
+        console.log("Emitting message: ", message);
+    };
+    
+    console.log("socket,", socket);
+
+    socket.on('new message', function(data) {
+    	console.log('Message received: ', data);
+        scope.messages.push(formatMessage(data));
+    });
+    
+    function formatMessage(data) {
+    	return "[00:00] " + data.username + ": " + data.message;
+    }
+    
 }]);
 
 app.directive('slot', function () {
@@ -59,6 +121,22 @@ app.directive('selectOnClick', function () {
 		};
 });
 
+app.directive('scrollToLast', ['$location', '$anchorScroll', function($location, $anchorScroll) {
+
+	function linkFn(scope, element, attrs) {
+		$location.hash(attrs.scrollToLast);
+		$anchorScroll();
+	}
+
+	return {
+		restrict: 'AE',
+		scope: {
+
+		},
+		link: linkFn
+	};
+
+}]);
 
 
 function initialize() {

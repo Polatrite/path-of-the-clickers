@@ -1,2 +1,8 @@
+# IDE
 .c9/
+
+# Dependencies
 node_modules/
+
+# Compiled
+client/compiled.js

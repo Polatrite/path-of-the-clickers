@@ -1,8 +1,11 @@
 var _ = require('underscore');
+var Minion = require('./Minion.js');
 var Item = require('./Item.js');
 var Player = require('./Player.js');
 var AffixType = require('./AffixType.js');
 var StatRange = require('./StatRange.js');
+
+var UiInventory = require('../client/lib/SupportlikDnD/uiInventory.js');
 
 var data = {};
 
@@ -107,79 +110,38 @@ preloadedInventory[13] = new Item({
 
 data.preloadedPlayer = new Player({
     inventory: preloadedInventory,
-    minions: [{
-        name: "Angel Warrior",
-        description: "She's an angel warrior, obviously.",
-        image: '../../img/monsters/angel-warrior-2.png',
-        badass: false,
-        /*items: {
-            weapon: {
-                cssClass: 'inventory-item sword1',
-                itemType: 'item weapon sword',
-                name: 'Frost Sword',
-                description: '(NULL)',
-                tooltip: 'Woah!'
+    minions: [
+        new Minion({
+            name: "Angel Warrior",
+            description: "She's an angel warrior, obviously.",
+            image: './img/minions/angel-warrior-2.png',
+            equipment: {
+    			weapon: new UiInventory(1, ['weapon'], []),
+    			trinket: new UiInventory(1, ['trinket'], []),
+    			amulet: new UiInventory(1, ['amulet'], [])
             }
-        }*/
-        items: [
-            {
-                index: 1,
-                itemType: 'weapon',
-                placeholderCssClass: 'inventory-placeholder weapon',
-                item: null
-            },
-            {
-                index: 2,
-                itemType: 'amulet',
-                placeholderCssClass: 'inventory-placeholder amulet',
-                item: null
-            },
-            {
-                index: 3,
-                itemType: 'trinket',
-                placeholderCssClass: 'inventory-placeholder trinket',
-                item: null
-            },
-        ]
-    }, {
-        name: "Baby Chimera",
-        description: "It's all fun and games until somebody is on fire.",
-        image: '../../img/monsters/chimera-1.png',
-        badass: false,
-        items: [
-            {
-                index: 1,
-                itemType: 'weapon',
-                placeholderCssClass: 'inventory-placeholder weapon',
-                item: null
-            },
-            {
-                index: 2,
-                itemType: 'amulet',
-                placeholderCssClass: 'inventory-placeholder amulet',
-                item: null
+        }),
+        new Minion({
+            name: "Baby Chimera",
+            description: "It's all fun and games until somebody is on fire.",
+            image: './img/minions/chimera-1.png',
+            equipment: {
+    			weapon: new UiInventory(1, ['weapon'], []),
+    			trinket: new UiInventory(1, ['trinket'], []),
+    			amulet: new UiInventory(1, ['amulet'], [])
             }
-        ]
-    }, {
-        name: "Wise Buddy",
-        description: "A frog.",
-        image: '../../img/monsters/frog-1.png',
-        badass: true,
-        items: [
-            {
-                index: 1,
-                itemType: 'weapon',
-                placeholderCssClass: 'inventory-placeholder weapon',
-                item: null
-            },
-            {
-                index: 2,
-                itemType: 'amulet',
-                placeholderCssClass: 'inventory-placeholder amulet',
-                item: null
+        }),
+        new Minion({
+            name: "Wise Buddy",
+            description: "A frog.",
+            image: './img/minions/frog-1.png',
+            equipment: {
+    			weapon: new UiInventory(1, ['weapon'], []),
+    			trinket: new UiInventory(1, ['trinket'], []),
+    			amulet: new UiInventory(1, ['amulet'], [])
             }
-        ]
-    }, ],
+        })
+    ],
     workers: 3859,
     workersUsed: 2811,
     money: 343417831.38

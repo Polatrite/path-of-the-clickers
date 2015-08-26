@@ -234,7 +234,7 @@ h2 {
     background-position: -350 -40px;
 }
 
-.monster-icon {
+.minion-icon {
     position: absolute;
     right: 0px;
     top: 0px;
@@ -244,7 +244,7 @@ h2 {
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);*/
 }
-.monster-icon:hover {
+.minion-icon:hover {
     transform: translate(0%, -10%) scale(1.2);
     transition-property: all;
     transition-duration: 0.2s;

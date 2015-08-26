@@ -111,7 +111,7 @@ module.exports = angular.module("dragInventory", [simplifiedDnD.name]).
                  * @returns {boolean|Item}
                  */
                 $scope.onDrop = function ($item, $target, $returnValue, index) {
-                    var res = $scope.inventory.add_item($item, index);
+                    var res = $scope.inventory.addItem($item, index);
                     sfDragNDropService.session.item = null;
                     sfDragNDropService.session.target = null;
                     sfDragNDropService.session.inv = null;

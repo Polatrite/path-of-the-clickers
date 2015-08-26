@@ -8,25 +8,25 @@ var Affix = function(conf) {
 	_.extend(this, conf);
 };
 
-Affix.prototype.apply = function(monster) {
-	if(monster.affixes.includes(this)){
-		console.error(monster.name + " already affected by " + this.name);
+Affix.prototype.apply = function(minion) {
+	if(minion.affixes.includes(this)){
+		console.error(minion.name + " already affected by " + this.name);
 		return;
 	}
 
-	monster.affixes.push(this);
+	minion.affixes.push(this);
 
 	_.each(this.stats, function(value, stat) {
-		if(stat in monster) {
-			monster[stat] += value;
+		if(stat in minion) {
+			minion[stat] += value;
 		}
 	});
 }
 
-Affix.prototype.remove = function(monster) {
+Affix.prototype.remove = function(minion) {
 	_.each(this.stats, function(value, stat) {
-		if(stat in monster) {
-			monster[stat] -= value;
+		if(stat in minion) {
+			minion[stat] -= value;
 		}
 	});
 }

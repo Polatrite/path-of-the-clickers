@@ -1,5 +1,11 @@
-var Monster = function(conf) {
+var _ = require('underscore');
+
+var Minion = function(conf) {
 	_.extend(this, {
+		name: "",
+		description: "",
+		image: "",
+		
 		level: 1,
 		exp: 0,
 		starRank: 1,
@@ -51,11 +57,12 @@ var Monster = function(conf) {
 	_.extend(this, conf);
 }
 
-Monster.prototype.getMaxLevel = function() {
+Minion.prototype.getMaxLevel = function() {
 	return starRank * 20;
 }
 
-Monster.prototype.takeDamage = function(attacker, damage) {
+Minion.prototype.takeDamage = function(attacker, damage) {
 	this.health = Math.max()
 }
 
+module.exports = Minion;

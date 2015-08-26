@@ -4,8 +4,8 @@
 	<title>Tamers of the Otherworld</title>
 	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
 	
-	<!--<script src="lib/jquery-2.1.1.js" text="type/javascript"></script>
-	<script src="lib/jquery-ui.min.js" text="type/javascript"></script>-->
+	<script src="lib/jquery-2.1.1.js" text="type/javascript"></script>
+	<!--<script src="lib/jquery-ui.min.js" text="type/javascript"></script>-->
 	<script src="lib/fastclick.js" text="type/javascript"></script>
 	<script src="lib/interact.js" text="type/javascript"></script>
 	<!--<script src="lib/bootstrap/js/bootstrap.js" text="type/javascript"></script>-->
@@ -63,6 +63,27 @@ window.addEventListener('load', function() {
 	</div>
 </div>
 
+<div class="modal fade" id="loginModal" ng-controller="LoginCtrl" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+				<h4 class="modal-title">Login</h4>
+			</div>
+			<div class="modal-body">
+				<label>Username:</label>
+				<input ng-model="username" type="text"></input>
+				<label>Password:</label>
+				<input ng-model="password" type="text"></input>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				<button ng-click="submit()" type="button" class="btn btn-primary">Login</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 <div class="row row-margin">
 	<div class="col-md-3">
 		<a href="http://www.reddit.com/r/polatrite" style="text-decoration: underline;">Subreddit</a> | <a href="http://www.reddit.com/r/incremental_games" style="text-decoration: underline;">Incremental Games</a> | <a href="http://www.github.com/Polatrite/polainc-seed" style="text-decoration: underline;">Source</a>
@@ -74,6 +95,18 @@ window.addEventListener('load', function() {
 	        Tamers of the Otherworld - Super Closed Alpha
 	    </h3>
 	</div>
+	
+	<div ng-controller="LoginCtrl">
+		<label>Username:</label>
+		<input ng-model="username" type="text"></input>
+		<label>Password:</label>
+		<input ng-model="password" type="text"></input>
+		<button ng-click="login()" ng-disabled="!username || !password" type="button" class="btn btn-primary">Login</button>
+		<button ng-click="signup()" ng-disabled="!username || !password" type="button" class="btn btn-primary">Sign-Up</button>
+	</div>
+	<button type="button" class="btn btn-default" ng-click="clickDebug1()">Debug 1</button>
+	<button type="button" class="btn btn-default" ng-click="clickDebug2()">Debug 2</button>
+	<button type="button" class="btn btn-default" ng-click="clickDebug3()">Debug 3</button>
 </div>
 
 <div class="row row-margin">
@@ -81,9 +114,9 @@ window.addEventListener('load', function() {
 	<div class="col-md-3">
 	    <h1>Inventory</h1>
 
-	    <ng-inventory inventory="inv" rows="r1" columns="c1"></ng-inventory>
-	    Chest
-	    <ng-inventory inventory="chest" rows="2" columns="5"></ng-inventory>
+	    <ng-inventory inventory="inventory" rows="r1" columns="c1"></ng-inventory>
+	    Stash
+	    <ng-inventory inventory="stash" rows="2" columns="5"></ng-inventory>
 	    Only not Enchanted Weapons:
 	    <ng-inventory inventory="weapon_not_enchanted" rows="2" columns="2"></ng-inventory>
 	    Any Enchanted Weapon, no Axe:
@@ -104,17 +137,15 @@ window.addEventListener('load', function() {
 		    
 			<div class="col-md-12" ng-repeat="minion in player.minions">
 				<h2>{{ minion.name }}</h2>
-				<img ng-src="{{minion.image}}" style="width: 155px; height: 116px;" class="img-responsive monster-icon"/>
+				<img ng-src="{{minion.image}}" style="width: 155px; height: 116px;" class="img-responsive minion-icon"/>
 				<div class="health-bar">
 				    <div class="health-bar-filler"></div>
 				</div>
 				<p>{{ minion.description }}</p>
 				
-				<div ng-repeat="item in minion.items">
-				    {{ item.name }}
-				</div>
-
-			    <ng-inventory inventory="minion_inventory" rows="1" columns="3"></ng-inventory>
+			    <ng-inventory inventory="minion.equipment.weapon" rows="1" columns="1"></ng-inventory>
+			    <ng-inventory inventory="minion.equipment.trinket" rows="1" columns="1"></ng-inventory>
+			    <ng-inventory inventory="minion.equipment.amulet" rows="1" columns="1"></ng-inventory>
 
 				<hr>
 			</div>

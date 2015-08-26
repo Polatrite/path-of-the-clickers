@@ -5,7 +5,7 @@
  * @param {String[]}blacklist
  */
 
-module.exports = function UiInventory(size, whitelist, blacklist) {
+module.exports = function UiInventory(size, whitelist, blacklist, items) {
     'use strict';
     /**
      * self reference for inner use
@@ -16,7 +16,7 @@ module.exports = function UiInventory(size, whitelist, blacklist) {
      * Items of the inventory. empty slots will be null
      * @type {Array}
      */
-    this.items = [];
+    this.items = items || [];
     /**
      * Size of the inventory
      * @type {Number}
@@ -169,7 +169,7 @@ module.exports = function UiInventory(size, whitelist, blacklist) {
      * @param position Optional. The wanted position of the item in the inventory.
      * @returns {boolean|Item} False if not added. True if added. Item if added and the position was already taken. So the item of this position is returned.
      */
-    this.add_item = function (a_item, position) {
+    this.addItem = function (a_item, position) {
 
         if (typeof position == "undefined" && !(that.get_empty_slot() >= 0)) {
             console.info("Inventory is full!", that, a_item);

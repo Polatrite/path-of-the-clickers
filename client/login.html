@@ -1,0 +1,54 @@
+	<div ng-show="tab == 'login'">
+		<div class="modal-header">
+			<h3 class="modal-title">Login</h3>
+		</div>
+		<div class="modal-body">
+			<div class="form-horizontal">
+				<div class="form-group">
+					<label class="control-label">Username:</label>
+					<input ng-model="username" type="text" class="form-control col-sm-10"></input>
+				</div>
+				<div class="form-group">
+					<label class="control-label">Password:</label>
+					<input ng-model="password" type="password" class="form-control"></input>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button ng-click="cancel()" ng-show="allowCancel" type="button" class="btn btn-default">Cancel</button>
+			<button ng-click="tab = 'signup'" type="button" class="btn btn-primary pull-left">Create New Account</button>
+			<button ng-click="login()" type="button" class="btn btn-primary">Login</button>
+		</div>
+	</div>
+	
+	
+	<div ng-show="tab == 'signup'">
+		<div class="modal-header">
+			<h3 class="modal-title">Create Account</h3>
+		</div>
+		<div class="modal-body">
+			<div class="form-horizontal">
+				<div class="form-group">
+					<label class="control-label">Username:</label>
+					<input ng-model="username" type="text" class="form-control col-sm-10"></input>
+				</div>
+				<div class="form-group">
+					<label class="control-label">Password:</label>
+					<input ng-model="password" type="password" class="form-control"></input>
+				</div>
+				<div class="form-group">
+					<label class="control-label">Confirm Password:</label>
+					<input ng-model="confirmPassword" type="password" class="form-control"></input>
+				</div>
+				<div class="form-group">
+					<label class="control-label">Email:</label>
+					<input ng-model="email" type="text" class="form-control"></input>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button ng-click="cancel()" ng-show="allowCancel" type="button" class="btn btn-default">Cancel</button>
+			<button ng-click="tab = 'login'" type="button" class="btn btn-primary pull-left">Login to Existing Account</button>
+			<button ng-click="signup()" type="button" class="btn btn-primary">Create</button>
+		</div>
+	</div>

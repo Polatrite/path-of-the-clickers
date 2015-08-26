@@ -2,6 +2,7 @@ window.appRoot = '.';
 window._ = require('underscore');
 
 var angular = require('angular');
+var uiBootstrap = require('angular-ui-bootstrap');
 var _ = require('underscore');
 
 var Item = require('./Item.js');
@@ -22,7 +23,7 @@ var socket = null;
 
 
 
-var app = angular.module('app', [dragInventory.name]);
+var app = angular.module('app', [dragInventory.name, uiBootstrap]);
 
 app.factory('socket', function($rootScope) {
 	var socket = require('socket.io-client')(url);
@@ -52,10 +53,11 @@ app.factory('socket', function($rootScope) {
 	};
 });
 
-app.controller("LoginCtrl", ['$scope', '$interval', '$timeout', 'socket', '$http', 'Player', function(scope, $interval, $timeout, socket, $http, Player) {
+app.controller("LoginCtrl", ['$scope', 'socket', '$http', 'Player', function(scope, socket, $http, Player) {
 	angular.extend(scope, {
 		username: '',
-		password: ''
+		password: '',
+		tab: 'login',
 	});
 	
 	angular.extend(scope, {
@@ -87,7 +89,7 @@ app.controller("LoginCtrl", ['$scope', '$interval', '$timeout', 'socket', '$http
 	});
 }]);
 
-app.controller("MainCtrl", ['$scope', '$interval', '$timeout', 'socket', '$http', 'Player', function(scope, $interval, $timeout, socket, $http, Player) {
+app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', function(scope, socket, $http, $modal, Player) {
 	angular.extend(scope, {
 		player: null,
 		inventory: [],
@@ -98,6 +100,14 @@ app.controller("MainCtrl", ['$scope', '$interval', '$timeout', 'socket', '$http'
 	
 	angular.extend(scope, {
 		start: function() {
+			var loginModal = $modal.open({
+				templateUrl: 'login.html',
+				controller: 'LoginCtrl',
+				openedClass: 'modal-open',
+				backdrop: 'static'
+				//keyboard: false
+			});
+			
 			$http.post('/player/create')
 				.then(function(req) {
 					console.log('Create call:', req);
@@ -136,11 +146,11 @@ app.controller("MainCtrl", ['$scope', '$interval', '$timeout', 'socket', '$http'
     scope.weapon_enchanted = new UiInventory(4, ['weapon', 'enchanted'], ['axe']);
     var sprite = "https://i.imgur.com/ngGK5MF.png";
 
-    scope.inv.addItem(new UiItem("Sword", ["item", "weapon", "sword"], 0, -170, sprite));
-    scope.inv.addItem(new UiItem("Sword", ["item", "weapon", "sword"], 0, -170, sprite));
-    scope.inv.addItem(new UiItem("Fire Sword", ["item", "weapon", "sword", "enchanted"], -34, -952, sprite));
-    scope.inv.addItem(new UiItem("Axe", ["item", "weapon", "axe"], -170, -340, sprite));
-    scope.inv.addItem(new UiItem("Fire Axe", ["item", "weapon", "axe", "enchanted"], -306, -340, sprite));
+    scope.inventory.addItem(new UiItem("Sword", ["item", "weapon", "sword"], 0, -170, sprite));
+    scope.inventory.addItem(new UiItem("Sword", ["item", "weapon", "sword"], 0, -170, sprite));
+    scope.inventory.addItem(new UiItem("Fire Sword", ["item", "weapon", "sword", "enchanted"], -34, -952, sprite));
+    scope.inventory.addItem(new UiItem("Axe", ["item", "weapon", "axe"], -170, -340, sprite));
+    scope.inventory.addItem(new UiItem("Fire Axe", ["item", "weapon", "axe", "enchanted"], -306, -340, sprite));
 
     scope.r1 = 5;
     scope.c1 = 5;

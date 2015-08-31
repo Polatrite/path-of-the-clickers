@@ -1,11 +1,15 @@
-var _ = require('underscore');
+var uidManager = require(appRoot + '/server/UidManager.js');
 
 var Affix = function(conf) {
-	this.entityType = 'Affix';
-	this.name = "Debugging";
-	this.type = "primary";
-	this.stats = {};
-	this.location = null;
+	_.extend(this, {
+		uid: uidManager.next(this),
+		entityType: 'Affix',
+		
+		name: "Debugging",
+		type: "primary",
+		stats: {},
+		location: null
+	})
 
 	_.extend(this, conf);
 };
@@ -27,6 +31,8 @@ Affix.prototype.apply = function(item) {
 	item.addStats(this.stats);
 
 	console.log("Applied " + this.toDebugString() + " to " + item.toDebugString());
+
+	return true;
 }
 
 Affix.prototype.unapply = function() {
@@ -48,6 +54,8 @@ Affix.prototype.unapply = function() {
 	this.location = null;
 
 	console.log("Unapplied " + this.toDebugString() + " from " + item.toDebugString());
+
+	return true;
 }
 
 module.exports = Affix;

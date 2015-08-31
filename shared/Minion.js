@@ -1,8 +1,10 @@
-var _ = require('underscore');
+var uidManager = require(appRoot + '/server/UidManager.js');
 
 var Minion = function(conf) {
 	_.extend(this, {
+		uid: uidManager.next(this),
 		entityType: 'Minion',
+		
 		name: "",
 		description: "",
 		image: "",
@@ -70,6 +72,8 @@ Minion.prototype.getMaxLevel = function() {
 
 Minion.prototype.takeDamage = function(attacker, damage) {
 	this.health = Math.max()
+
+	return true;
 }
 
 Minion.prototype.resetCombatStats = function() {
@@ -87,6 +91,8 @@ Minion.prototype.addStats = function(stats, myStats) {
 			myStats[stat] += value;
 		}
 	});
+
+	return true;
 }
 
 Minion.prototype.removeStats = function(stats, myStats) {
@@ -98,6 +104,8 @@ Minion.prototype.removeStats = function(stats, myStats) {
 			myStats[stat] -= value;
 		}
 	});
+
+	return true;
 }
 
 module.exports = Minion;

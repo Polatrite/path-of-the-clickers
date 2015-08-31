@@ -29,8 +29,8 @@ console.log(serverStorage.values());
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/client'));
 
-var routes = require(appRoot + '/server/routes.js');
-app.use('/player', routes);
+app.use('/player', require(appRoot + '/server/PlayerRoutes.js'));
+app.use('/item', require(appRoot + '/server/ItemRoutes.js'));
 
 server.listen(process.env.PORT, process.env.IP);
 ioServer.listen(server);

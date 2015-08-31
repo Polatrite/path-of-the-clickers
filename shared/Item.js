@@ -2,7 +2,7 @@ var uidManager = require(appRoot + '/server/UidManager.js');
 
 function Item(cfg) {
 	_.extend(this, {
-		uid: uidManager.next(),
+		uid: uidManager.next(this),
 		entityType: 'Item',
 		
 		name: '',
@@ -66,6 +66,7 @@ Item.prototype.equipOn = function(minion) {
 	this.location = minion;
 
 	console.log(minion.toDebugString() + " equipped " + this.toDebugString(), minion);
+	return true;
 }
 
 Item.prototype.unequip = function() {
@@ -80,6 +81,7 @@ Item.prototype.unequip = function() {
 	this.location = null;
 
 	console.log(minion.toDebugString() + " unequipped " + this.toDebugString());
+	return true;
 }
 
 Item.prototype.addStats = function(stats) {
@@ -96,6 +98,8 @@ Item.prototype.addStats = function(stats) {
 	if(minion) {
 		minion.addStats(stats, minion.permanentStats);
 	}
+
+	return true;
 }
 
 Item.prototype.removeStats = function(stats) {
@@ -112,6 +116,8 @@ Item.prototype.removeStats = function(stats) {
 	if(minion) {
 		minion.removeStats(stats, minion.permanentStats);
 	}
+
+	return true;
 }
 
 module.exports = Item;

@@ -6,7 +6,7 @@ var PlayerManager = {};
 
 PlayerManager.create = function(conf) {
 	var player = new Player(conf);
-	player.uid = uidManager.next();
+	player.uid = uidManager.next(player);
 	player.save();
 	PlayerManager[player.uid] = player;
 	return player;
@@ -22,6 +22,7 @@ PlayerManager.load = function(conf) {
 	if(!player)
 		return false;
 	PlayerManager[player.uid] = player;
+	uidManager.add(player);
 	return player;
 }
 

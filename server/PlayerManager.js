@@ -13,11 +13,14 @@ PlayerManager.create = function(conf) {
 }
 
 PlayerManager.load = function(conf) {
-	if(typeof(comp) === 'Number' && PlayerManager[conf]) {
+	if(typeof conf === 'number' && PlayerManager[conf]) {
 		return PlayerManager[conf];
 	}
 	var player = new Player();
 	player = player.load(conf);
+	console.log("Loaded player: ", player);
+	if(!player)
+		return false;
 	PlayerManager[player.uid] = player;
 	return player;
 }

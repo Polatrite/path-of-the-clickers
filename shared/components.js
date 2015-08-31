@@ -67,6 +67,9 @@ app.controller("LoginCtrl", ['$scope', 'socket', '$http', 'Player', function(sco
 				password: scope.password
 			}).then(function(res) {
 				console.log(res);
+				Player.instance = res.data;
+				console.log("Player service set to ", Player.instance);
+				scope.$close(res.data);
 			}, function(err) {
 				console.log(err);
 			});
@@ -92,26 +95,37 @@ app.controller("LoginCtrl", ['$scope', 'socket', '$http', 'Player', function(sco
 app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', function(scope, socket, $http, $modal, Player) {
 	angular.extend(scope, {
 		player: null,
-		inventory: [],
-		minions: [],
-		squads: [],
+		loggedIn: false,
         debugObjects: []
 	});
 	
 	angular.extend(scope, {
-		start: function() {
+		openLoginModal: function() {
 			var loginModal = $modal.open({
 				templateUrl: 'login.html',
 				controller: 'LoginCtrl',
 				openedClass: 'modal-open',
 				backdrop: 'static'
 				//keyboard: false
+			}).result.then(function(data) {
+				console.log("Modal data return", data);
+				scope.loadPlayer(data);
+				scope.loggedIn = true;
+				loginModal.close();
 			});
 			
+		},
+		
+		loadPlayer: function(player) {
+			player.inventory = 
+		},
+		start: function() {
 			$http.post('/player/create')
-				.then(function(req) {
-					console.log('Create call:', req);
-					Player.instance = req.data;
+				.then(function(res) {
+					console.log('Create call:', res);
+					Player.instance = res.data;
+					scope.player = Player.instance;
+					console.log("Scope player set to ", scope.player);
 				}, function(err) {
 					console.log(err);
 				});

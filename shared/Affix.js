@@ -1,34 +1,53 @@
 var _ = require('underscore');
 
 var Affix = function(conf) {
+	this.entityType = 'Affix';
 	this.name = "Debugging";
 	this.type = "primary";
 	this.stats = {};
+	this.location = null;
 
 	_.extend(this, conf);
 };
 
-Affix.prototype.apply = function(minion) {
-	if(minion.affixes.includes(this)){
-		console.error(minion.name + " already affected by " + this.name);
+Affix.prototype.apply = function(item) {
+	var affixArray = null;
+	if(this.type === 'primary') {
+		affixArray = item.affixes.primary;
+	} else if(this.type === 'utility') {
+		affixArray = item.affixes.utility;
+	}
+	if(affixArray.includes(this)){
+		console.error(item.toDebugString() + " already affected by " + this.toDebugString());
 		return;
 	}
 
-	minion.affixes.push(this);
+	affixArray.push(this);
+	this.location = item;
+	item.addStats(this.stats);
 
-	_.each(this.stats, function(value, stat) {
-		if(stat in minion) {
-			minion[stat] += value;
-		}
-	});
+	console.log("Applied " + this.toDebugString() + " to " + item.toDebugString());
 }
 
-Affix.prototype.remove = function(minion) {
-	_.each(this.stats, function(value, stat) {
-		if(stat in minion) {
-			minion[stat] -= value;
-		}
-	});
+Affix.prototype.unapply = function() {
+	var item = this.location;
+	if(!item) {
+		console.error(this.toDebugString() + " is not applied.");
+		return false;
+	}
+
+	var affixArray = null;
+	if(this.type === 'primary') {
+		affixArray = item.affixes.primary;
+	} else if(this.type === 'utility') {
+		affixArray = item.affixes.utility;
+	}
+
+	affixArray.remove(this);
+	item.removeStats(this.stats);
+	this.location = null;
+
+	console.log("Unapplied " + this.toDebugString() + " from " + item.toDebugString());
 }
 
 module.exports = Affix;

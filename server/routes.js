@@ -17,16 +17,28 @@ router.post('/:uid/signup', paperwork.accept({
 	captcha: String
 }), function(req, res) {
 	var uid = req.body.uid;
-	var player = PlayerManager.load(uid);
-	if(player !== undefined) {
-		player.username = req.body.username;
-		player.password = req.body.password;
-		player.email = req.body.email;
-		player.save();
-		res.send(player.clean());
-	} else {
-		res.send(500);
+	var username = req.body.username;
+	var player;
+	
+	player = PlayerManager.load({ loadByUsername: req.body.username });
+	if(player) {
+		console.error('Tried to load a username that already exists:', player);
+		return res.send('Username already exists.', 500);
 	}
+	
+	player = PlayerManager.load(uid);
+	if(!player) {
+		console.error("Couldn't find a player for UID " + uid, player);
+		return res.send("We couldn't find that player to associate this account information with. This is bad news bears.", 500);
+	}
+	
+	console.log(player);
+
+	player.username = req.body.username;
+	player.password = req.body.password;
+	player.email = req.body.email;
+	player.save();
+	res.send(player.clean());
 });
 
 router.post('/login', paperwork.accept({
@@ -34,12 +46,17 @@ router.post('/login', paperwork.accept({
 	password: String
 }), function(req, res) {
 	var player = PlayerManager.load({ loadByUsername: req.body.username });
-	
-	if(req.body.password == player.password) {
-		res.send(player.clean());
-	} else {
-		res.send(401);
+	console.log(player);
+	if(!player) {
+		console.error("Couldn't find a player", req.body);
+		return res.send("Player doesn't exist", 401);
 	}
+	if(req.body.password !== player.password) {
+		console.error('Incorrect password attempt', player);
+		return res.send('Incorrect password', 401);
+	}
+	
+	res.send(player.clean());
 });
 
 router.get('/:username', function(req, res) {

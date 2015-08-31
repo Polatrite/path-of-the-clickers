@@ -1,4 +1,6 @@
+require('long-stack-traces');
 GLOBAL.appRoot = require('app-root-path');
+GLOBAL.Util = require(appRoot + '/shared/utilities.js');
 GLOBAL._ = require('underscore');
 
 var express = require('express');
@@ -21,6 +23,8 @@ serverStorage.initSync({
 	dir: appRoot + '/database',
 	stringify: dbIfy
 });
+
+console.log(serverStorage.values());
 
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/client'));
@@ -99,3 +103,5 @@ ioServer.on('connection', function(socket) {
 });
 
 console.log("We running this joint!");
+
+var test = require(appRoot + '/test.js');

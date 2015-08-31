@@ -15,17 +15,27 @@ Player.prototype.load = function(conf) {
 }
 
 Player.prototype.loadById = function(id) {
-	return serverStorage.getItem(id);
+	_.extend(this, serverStorage.getItem(id));
+	if(!this.username)
+		return false;
+	return this;
 }
 
 Player.prototype.loadByUsername = function(username) {
-	return _.find(serverStorage.values(), function(entity) {
-		return entity.type == 'Player' && entity.username == username;
-	});
+	_.extend(this, 
+		_.find(serverStorage.values(), function(entity) {
+			return entity.entityType == 'Player' && entity.username == username;
+		})
+	);
+	if(!this.username)
+		return false;
+	return this;
 }
 
 Player.prototype.save = function() {
-	return serverStorage.setItem(this.uid.toString(), this);
+	serverStorage.setItem(this.uid.toString(), this);
+	console.log("Player [" + this.username + "] saved");
+	return true;
 }
 
 module.exports = Player;

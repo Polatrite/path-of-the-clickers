@@ -1,0 +1,35 @@
+<div class="inventory-table" >
+    <div class="inventory-row" ng-repeat="row in getNumber(rows)">
+        <div class="inventory-cell-outer" ng-repeat="column in getNumber(columns)">
+            <!--item cell-->
+            <div ng-class="{  'dragged': (dndSession.session.item == items[getItemIndex(column, row)]), 'targetted': (checkTarget(getItemIndex(column, row)))}"
+                 sf-drag="items[getItemIndex(column, row)]"
+                 sf-drop="items[getItemIndex(column, row)]"
+                 sf-on-drag="onDrag(getItemIndex(column, row), $event);"
+                 sf-on-drag-enter="onDragEnter($item, getItemIndex(column, row))"
+                 sf-on-drag-end="onDragEnd($item)"
+                 sf-on-drop="onDrop($item, $target, $returnValue, getItemIndex(column, row))"
+                 class="inventory-cell-inner inventory-cell-item {{'item_index-' + getItemIndex(column, row)}}"
+                 ng-style="items[getItemIndex(column, row)].get_item_background()"
+                 ng-if="inventory.isItemInSlot(getItemIndex(column, row))">
+                <!--(C{{column}} - R{{row}}-->
+                <!--IT{{items[getItemIndex(column, row)].name}})-->
+            </div>
+            <!--empty cell-->
+            <div ng-class="{ 'dragged': (dndSession.session.item == items[getItemIndex(column, row)]), 'targetted': (checkTarget(getItemIndex(column, row)))}"
+                 class="inventory-cell-inner inventory-cell-empty {{'item_index-' + getItemIndex(column, row)}}"
+                 sf-drop="items[getItemIndex(column, row)]"
+                 sf-on-drag-enter="onDragEnter($item, getItemIndex(column, row))"
+                 sf-on-drop="onDrop($item, $target, $returnValue, getItemIndex(column, row))"
+                 ng-if="!inventory.isItemInSlot(getItemIndex(column, row)) && getItemIndex(column, row) < inventory.size">
+                <!--(C{{column}} - R{{row}}-->
+                <!--EM)-->
+            </div>
+            <!--oversize-->
+            <div class="inventory-cell-inner inventory-cell-over"  ng-if="getItemIndex(column, row) >= inventory.size">
+                <!--(C{{column}} - R{{row}}-->
+                <!--OV)-->
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,34 +1,61 @@
-var _ = require('underscore');
+var uidManager = require(appRoot + '/server/UidManager.js');
 
 var Affix = function(conf) {
-	this.name = "Debugging";
-	this.type = "primary";
-	this.stats = {};
+	_.extend(this, {
+		uid: uidManager.next(this),
+		entityType: 'Affix',
+		
+		name: "Debugging",
+		type: "primary",
+		stats: {},
+		location: null
+	})
 
 	_.extend(this, conf);
 };
 
-Affix.prototype.apply = function(monster) {
-	if(monster.affixes.includes(this)){
-		console.error(monster.name + " already affected by " + this.name);
+Affix.prototype.apply = function(item) {
+	var affixArray = null;
+	if(this.type === 'primary') {
+		affixArray = item.affixes.primary;
+	} else if(this.type === 'utility') {
+		affixArray = item.affixes.utility;
+	}
+	if(affixArray.includes(this)){
+		console.error(item.toDebugString() + " already affected by " + this.toDebugString());
 		return;
 	}
 
-	monster.affixes.push(this);
+	affixArray.push(this);
+	this.location = item;
+	item.addStats(this.stats);
 
-	_.each(this.stats, function(value, stat) {
-		if(stat in monster) {
-			monster[stat] += value;
-		}
-	});
+	console.log("Applied " + this.toDebugString() + " to " + item.toDebugString());
+
+	return true;
 }
 
-Affix.prototype.remove = function(monster) {
-	_.each(this.stats, function(value, stat) {
-		if(stat in monster) {
-			monster[stat] -= value;
-		}
-	});
+Affix.prototype.unapply = function() {
+	var item = this.location;
+	if(!item) {
+		console.error(this.toDebugString() + " is not applied.");
+		return false;
+	}
+
+	var affixArray = null;
+	if(this.type === 'primary') {
+		affixArray = item.affixes.primary;
+	} else if(this.type === 'utility') {
+		affixArray = item.affixes.utility;
+	}
+
+	affixArray.remove(this);
+	item.removeStats(this.stats);
+	this.location = null;
+
+	console.log("Unapplied " + this.toDebugString() + " from " + item.toDebugString());
+
+	return true;
 }
 
 module.exports = Affix;

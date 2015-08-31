@@ -1,3 +1,12 @@
+if (!Object.prototype.toDebugString) {
+	Object.prototype.toDebugString = function() {
+		if(this.entityType && this.name) 
+			return this.entityType + '[' + this.name + ']';
+		else
+			return this.toString();
+	}
+}
+
 if (!Array.prototype.includes) {
 	Array.prototype.includes = function(searchElement /*, fromIndex*/ ) {
 		'use strict';
@@ -10,9 +19,12 @@ if (!Array.prototype.includes) {
 		var k;
 		if (n >= 0) {
 			k = n;
-		} else {
+		}
+		else {
 			k = len + n;
-			if (k < 0) {k = 0;}
+			if (k < 0) {
+				k = 0;
+			}
 		}
 		var currentElement;
 		while (k < len) {
@@ -20,13 +32,43 @@ if (!Array.prototype.includes) {
 			if (searchElement === currentElement ||
 				(searchElement !== searchElement && currentElement !== currentElement)) {
 				return true;
+			}
+			k++;
 		}
-		k++;
-	}
-	return false;
-};
+		return false;
+	};
 }
 
+if (!Array.prototype.remove) {
+	Array.prototype.remove = function(element) {
+		var index = this.indexOf(element);
+		this.splice(index, 1);
+		return this;
+	}
+}
+
+if (!Array.prototype.pick) {
+	Array.prototype.pick = function() {
+		var O = Object(this);
+		return O[Math.floor(Math.random()*this.length)];
+	}
+}
+
+if (!Math.randInt) {
+	Math.randInt = function(min, max) {
+		if(!min) min = 0;
+		if(!max) max = 100;
+		return Math.floor(Math.random() * (max - min) + min);
+	}
+}
+
+if (!Math.randInt) {
+	Math.randInt = function(min, max) {
+		if(!min) min = 0;
+		if(!max) max = 1;
+		return Math.random() * (max - min) + min;
+	}
+}
 
 function curr(value) {
 	return Number(value.toFixed(2));
@@ -34,30 +76,6 @@ function curr(value) {
 
 function round(value) {
 	return Math.round(value);
-}
-
-function removeElement(arr, elem) {
-	var index = arr.indexOf(elem);
-	arr.splice(index, 1);
-	return arr;
-}
-
-function randInt(min, max) {
-	if(!min) min = 0;
-	if(!max) max = 100;
-	return Math.floor(Math.random() * (max - min) + min);
-}
-
-function randDec(min, max) {
-	if(!min) min = 0;
-	if(!max) max = 1;
-	return Math.random() * (max - min) + min;
-}
-
-function generateRandomName() {
-	var startWords = [];
-	var middleWords = [];
-	var endWords = [];
 }
 
 function generateRandomName() {
@@ -88,12 +106,8 @@ function generateRandomName() {
 
 	var middleWord = "";
 	if(randInt(1,5) == 3) {
-		middleWord = pick(middleWords);
+		middleWord = middleWords.pick();
 	}
-	var name = pick(startWords) + " " + middleWord + (middleWord ? " " : "") + pick(endWords);
+	var name = startWords.pick() + " " + middleWord + (middleWord ? " " : "") + endWords.pick();
 	return name;
-}
-
-function pick(items) {
-	return items[Math.floor(Math.random()*items.length)];
 }

@@ -1,13 +1,20 @@
+window.appRoot = '.';
+window._ = require('underscore');
+
 var angular = require('angular');
+var uiBootstrap = require('angular-ui-bootstrap');
 var _ = require('underscore');
 
-var Player = require('./Player.js');
 var Item = require('./Item.js');
 var Minion = require('./Minion.js');
 var Affix = require('./Affix.js');
 var AffixType = require('./AffixType.js');
 var StatRange = require('./StatRange.js');
 var data = require('./data.js');
+
+var UiInventory = require('../client/lib/SupportlikDnD/uiInventory.js');
+var UiItem = require('../client/lib/SupportlikDnD/uiItem.js');
+var dragInventory = require('../client/lib/SupportlikDnD/dragInventory.js');
 
 var url = window.location.protocol + "//" + window.location.host + ":8080";
 console.log("Socket.io URL set to " + url);
@@ -16,7 +23,7 @@ var socket = null;
 
 
 
-var app = angular.module('app', []);
+var app = angular.module('app', [dragInventory.name, uiBootstrap]);
 
 app.factory('socket', function($rootScope) {
 	var socket = require('socket.io-client')(url);
@@ -46,25 +53,123 @@ app.factory('socket', function($rootScope) {
 	};
 });
 
-app.controller("MainCtrl", ['$scope', '$interval', '$timeout', 'socket', function(scope, $interval, $timeout, socket) {
+app.controller("LoginCtrl", ['$scope', 'socket', '$http', 'Player', function(scope, socket, $http, Player) {
+	angular.extend(scope, {
+		username: '',
+		password: '',
+		tab: 'login',
+	});
+	
+	angular.extend(scope, {
+		login: function() {
+			$http.post('/player/login', {
+				username: scope.username,
+				password: scope.password
+			}).then(function(res) {
+				console.log(res);
+				Player.instance = res.data;
+				console.log("Player service set to ", Player.instance);
+				scope.$close(res.data);
+			}, function(err) {
+				console.log(err);
+			});
+		},
+		signup: function() {
+			console.log('Signup Player:', Player);
+			$http.post('/player/' + Player.instance.uid + '/signup', {
+				uid: Player.instance.uid,
+				username: scope.username,
+				name: scope.username,
+				password: scope.password,
+				email: 'gamedev@mailinator.com',
+				captcha: 'unimplemented'
+			}).then(function(res) {
+				console.log(res);
+			}, function(err) {
+				console.log(err);
+			});
+		}
+	});
+}]);
+
+app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', function(scope, socket, $http, $modal, Player) {
 	angular.extend(scope, {
 		player: null,
-		inventory: [],
-		monsters: [],
-		squads: [],
+		loggedIn: false,
         debugObjects: []
 	});
 	
 	angular.extend(scope, {
+		openLoginModal: function() {
+			var loginModal = $modal.open({
+				templateUrl: 'login.html',
+				controller: 'LoginCtrl',
+				openedClass: 'modal-open',
+				backdrop: 'static'
+				//keyboard: false
+			}).result.then(function(data) {
+				console.log("Modal data return", data);
+				scope.loadPlayer(data);
+				scope.loggedIn = true;
+				loginModal.close();
+			});
+			
+		},
+		
+		loadPlayer: function(player) {
+			player.inventory = 
+		},
 		start: function() {
-			scope.player = data.preloadedPlayer;
-			scope.debugObjects = [scope.player, scope.inventory, scope.monsters];
+			$http.post('/player/create')
+				.then(function(res) {
+					console.log('Create call:', res);
+					Player.instance = res.data;
+					scope.player = Player.instance;
+					console.log("Scope player set to ", scope.player);
+				}, function(err) {
+					console.log(err);
+				});
+			
+			/*scope.player = data.preloadedPlayer;
+			scope.debugObjects = [scope.player, scope.inventory, scope.minions];
 			console.log("Player loaded", scope.player);
+			Player = scope.player;*/
+		},
+		
+		clickDebug1: function() {
+			$http.get('/player/100000')
+				.then(function(res) {
+					console.log(res);
+				}, function(err) {
+					
+				});
+		},
+		clickDebug2: function() {
+			
+		},
+		clickDebug3: function() {
+			
 		}
 	});
 	
-	
-	
+    scope.inventory = new UiInventory(50, [], []);
+    scope.inv2 = new UiInventory(50, [], ["enchanted"]);
+    scope.back_pack = new UiInventory(9, [], []);
+    scope.stash = new UiInventory(10, [], []);
+    scope.weapon_not_enchanted = new UiInventory(4, ['weapon'], ['enchanted']);
+    scope.weapon_enchanted = new UiInventory(4, ['weapon', 'enchanted'], ['axe']);
+    var sprite = "https://i.imgur.com/ngGK5MF.png";
+
+    scope.inventory.addItem(new UiItem("Sword", ["item", "weapon", "sword"], 0, -170, sprite));
+    scope.inventory.addItem(new UiItem("Sword", ["item", "weapon", "sword"], 0, -170, sprite));
+    scope.inventory.addItem(new UiItem("Fire Sword", ["item", "weapon", "sword", "enchanted"], -34, -952, sprite));
+    scope.inventory.addItem(new UiItem("Axe", ["item", "weapon", "axe"], -170, -340, sprite));
+    scope.inventory.addItem(new UiItem("Fire Axe", ["item", "weapon", "axe", "enchanted"], -306, -340, sprite));
+
+    scope.r1 = 5;
+    scope.c1 = 5;
+
+	console.log('Calling start');
 	scope.start();
 }]);
 
@@ -93,36 +198,42 @@ app.controller("ChatCtrl", ['$scope', 'socket', function(scope, socket) {
     
 }]);
 
-app.directive('slot', function () {
-		return {
-				restrict: 'A',
-				link: function (scope, element, attrs) {
-						element.on('click', function () {
-								if (!window.getSelection().toString()) {
-										// Required for mobile Safari
-										this.setSelectionRange(0, this.value.length)
-								}
-						});
-				}
-		};
+app.service('Player', function() {
+	var player;
+	return {
+		instance: player
+	}
 });
 
-app.directive('selectOnClick', function () {
-		return {
-				restrict: 'A',
-				link: function (scope, element, attrs) {
-						element.on('click', function () {
-								if (!window.getSelection().toString()) {
-										// Required for mobile Safari
-										this.setSelectionRange(0, this.value.length)
-								}
-						});
+app.directive('slot', function() {
+	return {
+		restrict: 'A',
+		link: function(scope, element, attrs) {
+			element.on('click', function() {
+				if (!window.getSelection().toString()) {
+					// Required for mobile Safari
+					this.setSelectionRange(0, this.value.length)
 				}
-		};
+			});
+		}
+	};
+});
+
+app.directive('selectOnClick', function() {
+	return {
+		restrict: 'A',
+		link: function(scope, element, attrs) {
+			element.on('click', function() {
+				if (!window.getSelection().toString()) {
+					// Required for mobile Safari
+					this.setSelectionRange(0, this.value.length)
+				}
+			});
+		}
+	};
 });
 
 app.directive('scrollToLast', ['$location', '$anchorScroll', function($location, $anchorScroll) {
-
 	function linkFn(scope, element, attrs) {
 		$location.hash(attrs.scrollToLast);
 		$anchorScroll();
@@ -137,36 +248,3 @@ app.directive('scrollToLast', ['$location', '$anchorScroll', function($location,
 	};
 
 }]);
-
-
-function initialize() {
-    setTimeout(function() {
-        refreshSortableInventoryList();
-        
-        var item = new Item();
-        item.name = "Frost Sword";
-        item.cssClass = "inventory-item sword1";
-        item.itemType = "item weapon sword";
-        
-        player.minions[0].items[0].item = item;
-
-        updateMinionItems();
-    }, 200);
-}
-
-function updateMinionItems() {
-    $("[apply-class]").addClass(function(index, currentClass) {
-        $(this).addClass($(this).attr('apply-class'));
-    });
-    $('.inventory-item').tooltip({
-        html: true
-    });
-
-    _.each(player.minions, function(minion) {
-        _.each(minion.items, function(item) {
-            //TODO
-        });
-    });
-}
-
-

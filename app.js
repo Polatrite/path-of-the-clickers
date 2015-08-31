@@ -1,51 +1,39 @@
+require('long-stack-traces');
+GLOBAL.appRoot = require('app-root-path');
+GLOBAL.Util = require(appRoot + '/shared/utilities.js');
+GLOBAL._ = require('underscore');
+
 var express = require('express');
+var bodyParser = require('body-parser');
 var app = express();
 var http = require('http');
+
 var server = http.createServer(app);
 var socketIoServer = require('socket.io');
 var ioServer = socketIoServer(server);
-var paperwork = require('paperwork');
+var serverStorage = require('node-persist');
+
+var router = express.Router();
+
+function dbIfy(value) {
+	return JSON.stringify(value, undefined, 2);
+}
+
+serverStorage.initSync({
+	dir: appRoot + '/database',
+	stringify: dbIfy
+});
+
+console.log(serverStorage.values());
+
+app.use(bodyParser.json());
+app.use(express.static(__dirname + '/client'));
+
+app.use('/player', require(appRoot + '/server/PlayerRoutes.js'));
+app.use('/item', require(appRoot + '/server/ItemRoutes.js'));
 
 server.listen(process.env.PORT, process.env.IP);
 ioServer.listen(server);
-
-var url = process.env.IP + ":" + process.env.PORT;
-/*console.log("Attempting to start Express... on " + url);
-var listener = app.listen(process.env.PORT, function(err) {
-	console.log("Express started");
-	console.log("Attempting to start socket.io...");
-	var servListener = server.listen(process.env.PORT, function(err) {
-		console.log("socket.io started");
-		console.log("Error?", err);
-		console.log("Everything up and running on port ", listener.address());
-		console.log("And", servListener);
-	});
-});*/
-
-
-
-app.use(express.static(__dirname + '/client'));
-
-
-/*
-https://github.com/Polatrite/paperwork
-
-
-
-*/
-var playerSignupModel = {
-	username: String,
-	password: String,
-	email: /[^@]+@[^@]+/
-}
-
-app.post('/player/:id/signup', paperwork.accept(playerSignupModel), function(req, res) {
-
-});
-
-app.post('/player/create', function(req, res) {
-	return new Player();
-});
 
 var usernames = {};
 var numUsers = 0;
@@ -115,3 +103,5 @@ ioServer.on('connection', function(socket) {
 });
 
 console.log("We running this joint!");
+
+var test = require(appRoot + '/test.js');

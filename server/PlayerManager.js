@@ -1,4 +1,4 @@
-var uidManager = require(appRoot + '/server/UidManager.js');
+var uidManager = require(appRoot + '/shared/UidManager.js');
 var Player = require(appRoot + '/shared/Player.js');
     Player = require(appRoot + '/server/SavePlayer.js');
 

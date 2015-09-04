@@ -5,13 +5,6 @@ var angular = require('angular');
 var uiBootstrap = require('angular-ui-bootstrap');
 var _ = require('underscore');
 
-var Item = require('./Item.js');
-var Minion = require('./Minion.js');
-var Affix = require('./Affix.js');
-var AffixType = require('./AffixType.js');
-var StatRange = require('./StatRange.js');
-var data = require('./data.js');
-
 var UiInventory = require('../client/lib/SupportlikDnD/uiInventory.js');
 var UiItem = require('../client/lib/SupportlikDnD/uiItem.js');
 var dragInventory = require('../client/lib/SupportlikDnD/dragInventory.js');
@@ -117,14 +110,49 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		},
 		
 		loadPlayer: function(player) {
-			player.inventory = 
+			scope.loadInventory(player);
+			scope.player = player;
 		},
+		
+		loadInventory: function(player) {
+			_.each(player.inventory.items, function(item) {
+				if(!item) return;
+				var uiItem = new UiItem(item.name, item);
+				console.log("Wrapped UiItem", uiItem);
+				scope.inventory.addItem(uiItem, item.locationIndex);
+			});
+		},
+		
+		updateInventory: function(player) {
+			var inventoryPost = [];
+			for(var i = 0; i < scope.inventory.items.length; i++) {
+				var uiItem = scope.inventory.items[i];
+				if(uiItem) {
+					inventoryPost.push({
+						uid: uiItem.serverItem.uid,
+						locationIndex: i
+					});
+				}
+			}
+			$http.post('/player/inventory/update', {
+				uid: player.uid,
+				inventory: inventoryPost
+			}).then(function(res) {
+				
+			}, function(err) {
+				
+			});
+		},
+		
 		start: function() {
 			$http.post('/player/create')
 				.then(function(res) {
 					console.log('Create call:', res);
 					Player.instance = res.data;
-					scope.player = Player.instance;
+					scope.loadPlayer(res.data);
+					scope.$watch('inventory.items', function() {
+						console.log("Inventory changed", scope.inventory);
+					});
 					console.log("Scope player set to ", scope.player);
 				}, function(err) {
 					console.log(err);
@@ -145,29 +173,38 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 				});
 		},
 		clickDebug2: function() {
-			
+			console.log(scope.inventory);
 		},
 		clickDebug3: function() {
 			
 		}
 	});
 	
-    scope.inventory = new UiInventory(50, [], []);
-    scope.inv2 = new UiInventory(50, [], ["enchanted"]);
-    scope.back_pack = new UiInventory(9, [], []);
-    scope.stash = new UiInventory(10, [], []);
-    scope.weapon_not_enchanted = new UiInventory(4, ['weapon'], ['enchanted']);
-    scope.weapon_enchanted = new UiInventory(4, ['weapon', 'enchanted'], ['axe']);
-    var sprite = "https://i.imgur.com/ngGK5MF.png";
+    scope.inventory = new UiInventory(32, [], [], [], function(action, item, from, fromIndex, to, toIndex) {
+    	console.log("Inventory has changed", arguments);
+    	if(scope.player)
+    		scope.updateInventory(scope.player);
+    });
+    
+    scope.stash = new UiInventory(40, [], [], [], function(action, item, from, fromIndex, to, toIndex) {
+    	console.log("Stash has changed", arguments);
+    	if(scope.player)
+    		scope.updateInventory(scope.player);
+    });
 
-    scope.inventory.addItem(new UiItem("Sword", ["item", "weapon", "sword"], 0, -170, sprite));
+    /*scope.inv2 = new UiInventory(50, [], ["enchanted"]);
+    scope.back_pack = new UiInventory(9, [], []);
+    scope.weapon_not_enchanted = new UiInventory(4, ['weapon'], ['enchanted']);
+    scope.weapon_enchanted = new UiInventory(4, ['weapon', 'enchanted'], ['axe']);*/
+
+    /*scope.inventory.addItem(new UiItem("Sword", ["item", "weapon", "sword"], 0, -170, sprite));
     scope.inventory.addItem(new UiItem("Sword", ["item", "weapon", "sword"], 0, -170, sprite));
     scope.inventory.addItem(new UiItem("Fire Sword", ["item", "weapon", "sword", "enchanted"], -34, -952, sprite));
     scope.inventory.addItem(new UiItem("Axe", ["item", "weapon", "axe"], -170, -340, sprite));
-    scope.inventory.addItem(new UiItem("Fire Axe", ["item", "weapon", "axe", "enchanted"], -306, -340, sprite));
+    scope.inventory.addItem(new UiItem("Fire Axe", ["item", "weapon", "axe", "enchanted"], -306, -340, sprite));*/
 
     scope.r1 = 5;
-    scope.c1 = 5;
+    scope.c1 = 8;
 
 	console.log('Calling start');
 	scope.start();

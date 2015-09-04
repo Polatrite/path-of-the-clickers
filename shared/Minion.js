@@ -1,4 +1,4 @@
-var uidManager = require(appRoot + '/server/UidManager.js');
+var uidManager = require(appRoot + '/shared/UidManager.js');
 
 var Minion = function(conf) {
 	_.extend(this, {

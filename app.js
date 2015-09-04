@@ -24,6 +24,7 @@ serverStorage.initSync({
 	stringify: dbIfy
 });
 
+GLOBAL.$E = require(appRoot + '/shared/uid.js');
 console.log(serverStorage.values());
 
 app.use(bodyParser.json());

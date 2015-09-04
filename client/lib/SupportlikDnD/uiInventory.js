@@ -5,7 +5,7 @@
  * @param {String[]}blacklist
  */
 
-module.exports = function UiInventory(size, whitelist, blacklist, items) {
+module.exports = function UiInventory(size, whitelist, blacklist, items, changedCallback) {
     'use strict';
     /**
      * self reference for inner use
@@ -17,6 +17,11 @@ module.exports = function UiInventory(size, whitelist, blacklist, items) {
      * @type {Array}
      */
     this.items = items || [];
+    
+    /**
+     * Callback that fires whenever the items have changed
+     */
+    this.changedCallback = changedCallback;
     /**
      * Size of the inventory
      * @type {Number}
@@ -194,23 +199,44 @@ module.exports = function UiInventory(size, whitelist, blacklist, items) {
             }
         });
         var ret = false;
+        var from, to = null;
+        var fromIndex = -1;
+        var toIndex = -1;
         if (!exists) {
             if (typeof position == "undefined") {
-                that.items[that.get_empty_slot()] = (a_item);
+console.log("pos undefined");
+                to = that;
+                toIndex = that.get_empty_slot()
+                that.items[toIndex] = (a_item);
                 ret = true;
 
             } else {
                 if (that.items[position] == null) {
+console.log("pos null");
                     that.items[position] = a_item;
+                    to = that;
+                    toIndex = position;
                     ret = true;
                 } else {
+console.log("other item");
                     var tmp_item = that.items[position];
-                    var old_container = a_item.container;
-                    var old_index = old_container.items.indexOf(a_item);
-                    if (old_container.checkItemFilter(tmp_item)) {
-                        that.items[position] = a_item;
-                        old_container.items[old_index] = tmp_item;
-                        tmp_item.container = old_container;
+                    from = a_item.container;
+                    fromIndex = from.items.indexOf(a_item);
+                    if (from.checkItemFilter(tmp_item)) {
+                        to = that;
+                        toIndex = position;
+                        to.items[toIndex] = a_item;
+                        from.items[fromIndex] = tmp_item;
+                        tmp_item.container = from;
+                        var thing = {
+                            from: from,
+                            fromIndex: fromIndex,
+                            to: to,
+                            toIndex: toIndex
+                        };
+console.log("not exist deep dumb ", thing);
+                        that.changedCallback("moved", tmp_item, to, toIndex, from, fromIndex);
+console.log("not exist deep " + fromIndex + "," + toIndex);
                         ret = true;
                     } else {
                         return false;
@@ -219,30 +245,50 @@ module.exports = function UiInventory(size, whitelist, blacklist, items) {
                 }
             }
             if (a_item.container != null) {
-                var old_index = a_item.container.items.indexOf(a_item);
-                a_item.container.items[old_index] = null;
+                from = a_item.container;
+console.log("not null container " + fromIndex + "," + toIndex);
+                if(fromIndex == -1) {
+                    fromIndex = from.items.indexOf(a_item);
+console.log("not null container " + fromIndex + "," + toIndex);
+                    from.items[fromIndex] = null;
+                }
+console.log("not null container " + fromIndex + "," + toIndex);
+                //a_item.container.changedCallback("moved", a_item, from, fromIndex, to, toIndex);
             }
             a_item.container = that;
 
         } else {
+console.log("pos initial");
+            from = that;
+            fromIndex = that.items.indexOf(a_item);
+            to = that;
+            
             if (typeof position == "undefined") {
-                that.items[that.get_empty_slot()] = (a_item);
+console.log("pos undefined");
+                toIndex = that.get_empty_slot()
+                that.items[toIndex] = (a_item);
                 ret = true;
             } else {
                 if (that.items[position] == null) {
-                    var old_index = that.items.indexOf(a_item);
-                    that.items[old_index] = null;
+console.log("pos null");
+                    that.items[fromIndex] = null;
                     that.items[position] = a_item;
+                    toIndex = position;
                     ret = true;
                 } else {
                     var tmp_item = that.items[position];
-                    var old_index = that.items.indexOf(a_item);
                     that.items[position] = a_item;
-                    that.items[old_index] = tmp_item;
+                    that.items[fromIndex] = tmp_item;
+console.log("exist deep");
+                    that.changedCallback("moved", tmp_item, that, position, that, fromIndex);
+                    toIndex = position;
                     ret = true;
                 }
             }
         }
+
+console.log("end");
+        that.changedCallback("moved", a_item, from, fromIndex, to, toIndex);
         return ret;
     };
     /**
@@ -250,11 +296,12 @@ module.exports = function UiInventory(size, whitelist, blacklist, items) {
      * @param r_item
      */
     this.remove_item = function (r_item) {
+        console.error("Remove item called");
         var exists = false;
         var item_index = -1;
         for (var index = 0; index < that.items.length; index++) {
             var item = that.items[index];
-            if (item == r_tag) {
+            if (item == r_item) {
                 item_index = index;
                 exists = true;
             }

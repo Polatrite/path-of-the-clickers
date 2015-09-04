@@ -1,9 +1,12 @@
+var Player = require(appRoot + '/shared/Player.js');
 var Minion = require(appRoot + '/shared/Minion.js');
 var Item = require(appRoot + '/shared/Item.js');
 var Affix = require(appRoot + '/shared/Affix.js');
 var AffixType = require(appRoot + '/shared/AffixType.js');
 
-
+var player = new Player({
+	name: 'Test Dummy'
+});
 
 var minion = new Minion({
 	name: 'Big Pig',
@@ -37,5 +40,18 @@ item.equipOn(minion);
 affix.unapply();
 affix.apply(item);
 item.unequip();
+
+item.move(player.inventory, 4);
+item.move(player.inventory);
+item.move(player.stash, 10);
+
+var item2 = new Item();
+item2.move(player.stash, 6);
+
+//console.log(player.inventory.items);
+//console.log(player.stash.items);
+
+console.log("Retrieving.." + item2.uid);
+console.log($E(item2.uid));
 
 console.log("Tests finished");

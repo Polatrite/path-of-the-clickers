@@ -19,6 +19,7 @@ module.exports = {
 	add: function(entity) {
 		UidManager.entities[entity.uid] = entity;
 	},
+	
 	get: function(uid) {
 		return UidManager.entities[uid];
 	}

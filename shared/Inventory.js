@@ -39,12 +39,13 @@ Inventory.prototype.addItem = function(item, newIndex) {
 }
 
 Inventory.prototype.removeItem = function(item) {
-	if(!this.items.includes(item)) {
+	var found = this.items.removeUid(item.uid);
+
+	if(!found) {
 		console.error("Tried to remove an item from " + this.name + " but it doesn't exist.");
 		return false;
 	}
 	
-	this.items.remove(item);
 	item.location = null;
 	item.locationIndex = -1;
 	return true;

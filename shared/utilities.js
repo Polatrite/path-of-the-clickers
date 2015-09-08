@@ -37,6 +37,36 @@ if (!Array.prototype.includes) {
 		}
 		return false;
 	};
+}	
+if (!Array.prototype.includesUid) {
+	Array.prototype.includesUid = function(uid) {
+		'use strict';
+		var arr = Object(this);
+		for(var i = 0; i < arr.length; i++) {
+			if(arr[i] && arr[i].uid === uid) {
+				return i;
+			}
+		}
+		
+		return -1;
+	};
+}
+if (!Array.prototype.removeUid) {
+	Array.prototype.removeUid = function(uid, replace) {
+		'use strict';
+		if(replace === undefined) replace = null;
+		var arr = Object(this);
+		var found = false;
+		for(var i = 0; i < arr.length; i++) {
+			if(arr[i] && arr[i].uid === uid) {
+				arr[i] = replace;
+				found = true;
+			}
+		}
+		
+		return found;
+	};
+
 }
 
 if (!Array.prototype.remove) {

@@ -18,7 +18,7 @@ PlayerManager.load = function(conf) {
 	}
 	var player = new Player();
 	player = player.load(conf);
-	console.log("Loaded player: ", player);
+	console.log("Loaded player: ", player.username);
 	if(!player)
 		return false;
 	PlayerManager[player.uid] = player;

@@ -1,4 +1,5 @@
 window.appRoot = '.';
+window.Util = require('../shared/utilities.js');
 window._ = require('underscore');
 window.strf = require('../shared/strf.js');
 
@@ -103,12 +104,11 @@ app.controller("LoginCtrl", ['$scope', 'socket', '$http', 'Player', function(sco
 app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', function(scope, socket, $http, $modal, Player) {
 	angular.extend(scope, {
 		player: null,
-		inventory: null,
-		stash: null,
+		inventory: new UiInventory(null, 40, [], [], [], scope.itemMovedEvent),
 		loggedIn: false,
         debugObjects: []
 	});
-	
+
 	angular.extend(scope, {
 		openLoginModal: function() {
 			var loginModal = $modal.open({
@@ -118,10 +118,6 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 				backdrop: 'static'
 				//keyboard: false
 			}).result.then(function(data) {
-				scope.player = null;
-				scope.inventory.items = [];
-				scope.inventory = null;
-				scope.stash = null;
 				console.log("Modal data return", data);
 				scope.loadPlayer(data);
 				scope.loggedIn = true;
@@ -130,19 +126,23 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		},
 		
 		loadPlayer: function(player) {
-		    scope.inventory = new UiInventory(player.inventory, 32, [], [], [], scope.itemMovedEvent);
-		    scope.stash = new UiInventory(player.stash, 40, [], [], [], scope.itemMovedEvent);
-			scope.loadInventory(player);
+			scope.player = null;
+			scope.loadInventory(player.inventory);
 			scope.player = player;
 		},
 		
-		loadInventory: function(player) {
-			_.each(player.inventory.items, function(item) {
+		loadInventory: function(inventory) {
+			console.log("Inventory before ", scope.inventory);
+			scope.inventory.clear();
+			scope.inventory.inventoryModel = inventory;
+			_.each(inventory.items, function(item) {
 				if(!item) return;
 				var uiItem = new UiItem(item.name, item);
 				console.log("Wrapped UiItem", uiItem);
 				scope.inventory.addItem(uiItem, item.locationIndex, true);
 			});
+			scope.inventory.changedCallback = scope.itemMovedEvent;
+			console.log("Inventory after ", scope.inventory);
 		},
 		
 		resyncPlayer: function() {
@@ -208,6 +208,23 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		clickDebug3: function() {
 			
 		},
+		
+		craft: function() {
+			var baseItemTypes = ['GlassShard', 'WoodenSword', 'BasicHatchet'];
+			var baseItemType = baseItemTypes.pick();
+			$http.post('/item/craft', {
+				playerUid: scope.player.uid,
+				baseItem: baseItemType,
+				components: []
+			}).then(function(res) {
+				if(res.data.inventory) {
+					scope.loadInventory(res.data.inventory);
+					console.log("Reloaded inventory");
+				}
+			}, function(err) {
+				console.error(err);
+			});
+		},
 		itemMovedEvent: function(action, item, from, fromIndex, to, toIndex) {
 	    	if(!scope.player)
 	    		return;
@@ -230,10 +247,6 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
     scope.inventory.addItem(new UiItem("Axe", ["item", "weapon", "axe"], -170, -340, sprite));
     scope.inventory.addItem(new UiItem("Fire Axe", ["item", "weapon", "axe", "enchanted"], -306, -340, sprite));*/
 
-    scope.r1 = 5;
-    scope.c1 = 8;
-
-	console.log('Calling start');
 	scope.start();
 }]);
 

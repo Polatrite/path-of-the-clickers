@@ -1,9 +1,12 @@
 var uidManager = require(appRoot + '/shared/UidManager.js');
+var BaseItem = require(appRoot + '/shared/BaseItem.js');
 
 function Item(cfg) {
 	_.extend(this, {
 		uid: uidManager.next(this),
 		entityType: 'Item',
+		
+		baseItem: 0,
 		
 		name: '',
 		description: '',
@@ -54,8 +57,20 @@ function Item(cfg) {
 		equipped: null
 		
 	});
+	
+	if(cfg && cfg.baseItem) {
+		this.applyBaseItem(cfg.baseItem);
+	}
 
 	_.extend(this, cfg);
+}
+
+Item.prototype.applyBaseItem = function(type) {
+	if(BaseItem[type] === undefined) {
+		return false;
+	}
+		
+	_.extend(this, BaseItem[type]);
 }
 
 Item.prototype.equipOn = function(minion) {
@@ -98,23 +113,21 @@ Item.prototype.move = function(newLocation, newIndex) {
 	if(this.equipped) {
 		this.unequip();
 	}
-	
+	if(this.location) {
+		console.log(strf("Removed [name] [entityType]", this));
+		$E(this.location).removeItem(this);
+	}
+
 	if(newLocation.entityType === 'Player') {
 		var player = newLocation;
-		if(this.location) {
-			$E(this.location).removeItem(this);
-		}
+		console.log(strf("Added [name] [entityType]", this));
 		player.inventory.addItem(this, newIndex);
 		console.log(this.toDebugString() + " moved to " + player.toDebugString() + ".");
 	}
 	if(newLocation.entityType === 'Inventory') {
 		var inventory = newLocation;
-		if(this.location) {
-			$E(this.location).removeItem(this);
-		}
-		console.log(inventory);
 		inventory.addItem(this, newIndex);
-		console.log(this.toDebugString() + " moved to " + $E(inventory.location).toDebugString() + ".");
+		console.log(this.toDebugString() + " moved to " + inventory.toDebugString() + ".");
 	}
 	
 	return true;

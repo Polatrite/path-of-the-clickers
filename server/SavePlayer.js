@@ -19,9 +19,8 @@ Player.prototype.load = function(conf) {
 Player.prototype.loadExternalEntities = function() {
 	this.inventory = new Inventory(this.inventory.items.length, this, this.inventory);
 	UidManager.add(this.inventory);
-	this.stash = new Inventory(this.stash.items.length, this, this.stash);
-	UidManager.add(this.stash);
 	for(var i = 0; i < this.inventory.items.length; i++) {
+		console.log(this.inventory.items[i]);
 		if(this.inventory.items[i]) {
 			this.inventory.items[i] = new Item(this.inventory.items[i]);
 			UidManager.add(this.inventory.items[i]);
@@ -30,22 +29,28 @@ Player.prototype.loadExternalEntities = function() {
 }
 
 Player.prototype.loadById = function(id) {
+	//console.log("loadById():", this);
 	_.extend(this, UidManager.get(id));
 	if(!this.username)
 		return false;
+	//console.log("loadById():", this);
 	this.loadExternalEntities();
+	//console.log("loadById():", this);
 	return this;
 }
 
 Player.prototype.loadByUsername = function(username) {
+	//console.log("loadByUsername():", this);
 	_.extend(this, 
 		UidManager.getByFunc(function(entity) {
-			return entity.entityType == 'Player' && entity.username == username;
+			return entity && entity.entityType == 'Player' && entity.username == username;
 		})
 	);
 	if(!this.username)
 		return false;
+	//console.log("loadByUsername():", this);
 	this.loadExternalEntities();
+	//console.log("loadByUsername():", this);
 	return this;
 }
 

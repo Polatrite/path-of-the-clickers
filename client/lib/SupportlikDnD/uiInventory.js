@@ -318,4 +318,10 @@ console.log("end");
             console.info("This item doesn't exists in this inventory: ", that, r_item);
         }
     }
+    
+    this.clear = function() {
+        for (var index = 0; index < that.items.length; index++) {
+            delete that.items[index];
+        }
+    }
 }

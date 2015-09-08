@@ -43,15 +43,12 @@ item.unequip();
 
 item.move(player.inventory, 4);
 item.move(player.inventory);
-item.move(player.stash, 10);
+item.move(player.inventory, 10);
 
 var item2 = new Item();
-item2.move(player.stash, 6);
+item2.move(player.inventory, 6);
+item2.move(player.inventory, 12);
 
 //console.log(player.inventory.items);
-//console.log(player.stash.items);
-
-console.log("Retrieving.." + item2.uid);
-console.log($E(item2.uid));
 
 console.log("Tests finished");

@@ -9,21 +9,6 @@ var router = express.Router();
 
 router.post('/create', function(req, res) {
 	var player = PlayerManager.create();
-	var item = new Item({
-		name: 'Jimmy Cricket',
-		itemType: ['item', 'weapon', 'sword'],
-		spriteX: 1,
-		spriteY: 6
-	});
-	item.move(player.inventory);
-	item = new Item({
-		name: 'Herpy Derp',
-		itemType: ['item', 'weapon', 'sword'],
-		spriteX: 2,
-		spriteY: 7
-	});
-	item.move(player.inventory);
-	
 	res.send(player.clean());
 });
 
@@ -37,7 +22,7 @@ router.post('/:uid/signup', paperwork.accept({
 	var uid = req.body.uid;
 	var username = req.body.username;
 	var player;
-	
+
 	player = PlayerManager.load({ loadByUsername: req.body.username });
 	if(player) {
 		console.error('Tried to load a username that already exists:', player);
@@ -100,27 +85,6 @@ router.post('/:uid/changePassword', paperwork.accept({
 }), function(req, res) {
 	
 });
-
-router.post('/inventory/update', paperwork.accept({
-	uid: String,
-	inventory: Array
-}), function(req, res) {
-	res.send(501);
-	return;
-	var player = PlayerManager.load({ loadByUsername: req.body.username });
-	console.log(player);
-	if(!player) {
-		console.error("Couldn't find a player", req.body);
-		return res.send("Player doesn't exist", 401);
-	}
-	if(req.body.password !== player.password) {
-		console.error('Incorrect password attempt', player);
-		return res.send('Incorrect password', 401);
-	}
-	
-	res.send(player.clean());
-});
-
 
 console.log('Initialized routes');
 

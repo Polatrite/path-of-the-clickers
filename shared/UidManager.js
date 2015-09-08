@@ -31,12 +31,15 @@ module.exports = {
 			UidManager.entities[uid] = serverStorage.getItem(uid);
 			console.log("UidManager.get(): #" + uid + " loaded from database.");
 		}
-		//console.log("UidManager.get(): Returning ", UidManager.entities[uid]);
+		console.log("UidManager.get(): Returning ", uid);
 		return UidManager.entities[uid];
 	},
 	
 	getByFunc: function(findFunc) {
-		return _.find(serverStorage.values(), findFunc);
+		var entity = _.find(serverStorage.values(), findFunc);
+		if(entity)
+			console.log("UidManager.get(): Returning ", entity.uid);
+		return entity;
 	},
 	
 	save: function(uid) {

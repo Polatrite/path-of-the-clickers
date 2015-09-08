@@ -1,7 +1,7 @@
 <html ng-app="app">
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Tamers of the Otherworld</title>
+	<title>TotO - Tamers of the Otherworld</title>
 	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
 	
 	<script src="lib/jquery-2.1.1.js" text="type/javascript"></script>
@@ -46,7 +46,7 @@ window.addEventListener('load', function() {
 	</div>
 	<div class="col-md-5">
 	    <h3>
-	        Tamers of the Otherworld - Super Closed Alpha
+	        TotO - Super Closed Alpha
 	    </h3>
 	    <h4 ng-show="loggedIn">Logged in as: {{ player.username }}</h4>
 	</div>
@@ -60,24 +60,18 @@ window.addEventListener('load', function() {
 <div class="row row-margin">
     <!-- INVENTORY, SKILLS, CURRENCY -->
 	<div class="col-md-3">
-	    <h1>Inventory</h1>
+	    <h2>Inventory</h2>
 
-	    <ng-inventory inventory="inventory" rows="4" columns="8"></ng-inventory>
-	    Stash
-	    <ng-inventory inventory="stash" rows="5" columns="8"></ng-inventory>
-
-
-        <hr>
-        
-		<h3>{{ player.money}}</h3>
-		<h4>{{ player.workersUsed}} / {{ player.workers}}</h4>
-
+		<div>
+		    <ng-inventory inventory="inventory" rows="5" columns="8"></ng-inventory>
+			<button type="button" class="btn btn-default" ng-click="craft()">Craft</button>
+		</div>
 	</div>
 
 	<!-- MINIONS -->
 	<div class="col-md-3">
 		<div class="row">
-		    <h1>Minions</h1>
+		    <h2>Minions</h2>
 		    
 			<div class="col-md-12" ng-repeat="minion in player.minions">
 				<h2>{{ minion.name }}</h2>
@@ -98,7 +92,7 @@ window.addEventListener('load', function() {
 	
 	<!-- MAPS, ADVENTURES -->
 	<div class="col-md-3">
-	    <h1>Maps</h1>
+	    <h2>Maps</h2>
 	    <div class="chat-box" ng-controller="ChatCtrl">
 		    <input type="checkbox" />
 		    <label data-expanded="({{ messages.length }}) Close Chatbox" data-collapsed="({{ messages.length }}) Open Chatbox"></label>

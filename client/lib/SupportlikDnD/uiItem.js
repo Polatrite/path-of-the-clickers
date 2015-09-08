@@ -7,13 +7,16 @@
  * @param {Number} img_y_position img y position in the spritesheet
  * @param {String} spritesheet url of the spritesheet
  */
-module.exports = function UiItem(name, tags, img_x_position, img_y_position, spritesheet) {
+module.exports = function UiItem(name, serverItem) {
     'use strict';
     /**
      * self reference for inner use
      * @type {Item}
      */
     var that = this;
+    
+    this.serverItem = serverItem;
+    
     /**
      * name of the item
      * @type {String}
@@ -23,7 +26,7 @@ module.exports = function UiItem(name, tags, img_x_position, img_y_position, spr
      * Tags of the item.
      * @type {String[]}
      */
-    this.tags = tags;
+    this.tags = serverItem.itemType;
     /**
      *
      * @type {Inventory}
@@ -34,17 +37,17 @@ module.exports = function UiItem(name, tags, img_x_position, img_y_position, spr
      * x position of the item in the spritesheet
      * @type {Number}
      */
-    this.img_x_p = img_x_position;
+    this.img_x_p = serverItem.spriteX * -34;
     /**
      * y position of the item in the spritesheet
      * @type {Number}
      */
-    this.img_y_p = img_y_position;
+    this.img_y_p = serverItem.spriteY * -34;
     /**
      * url to the spritesheet. can be a relative link
      * @type {String}
      */
-    this.spritesheet = spritesheet;
+    this.spritesheet = serverItem.spritesheet;
 
     /**
      * Adds a tag to the item.
@@ -67,11 +70,11 @@ module.exports = function UiItem(name, tags, img_x_position, img_y_position, spr
      */
     this.remove_tag = function(r_tag){
         var exists = false;
-        var item_index = -1;
+        var tag_index = -1;
         for(var index = 0; index < that.tags.length; index++){
             var tag = that.tags[index];
             if(tag == r_tag){
-                item_index = index;
+                tag_index = index;
                 exists = true;
             }
         }

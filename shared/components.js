@@ -1,16 +1,10 @@
 window.appRoot = '.';
 window._ = require('underscore');
+window.strf = require('../shared/strf.js');
 
 var angular = require('angular');
 var uiBootstrap = require('angular-ui-bootstrap');
 var _ = require('underscore');
-
-var Item = require('./Item.js');
-var Minion = require('./Minion.js');
-var Affix = require('./Affix.js');
-var AffixType = require('./AffixType.js');
-var StatRange = require('./StatRange.js');
-var data = require('./data.js');
 
 var UiInventory = require('../client/lib/SupportlikDnD/uiInventory.js');
 var UiItem = require('../client/lib/SupportlikDnD/uiItem.js');
@@ -55,6 +49,8 @@ app.factory('socket', function($rootScope) {
 
 app.controller("LoginCtrl", ['$scope', 'socket', '$http', 'Player', function(scope, socket, $http, Player) {
 	angular.extend(scope, {
+		error: null,
+		loading: false,
 		username: '',
 		password: '',
 		tab: 'login',
@@ -62,30 +58,42 @@ app.controller("LoginCtrl", ['$scope', 'socket', '$http', 'Player', function(sco
 	
 	angular.extend(scope, {
 		login: function() {
+			scope.error = null;
+			scope.loading = true;
 			$http.post('/player/login', {
 				username: scope.username,
 				password: scope.password
 			}).then(function(res) {
+				scope.loading = false;
 				console.log(res);
 				Player.instance = res.data;
 				console.log("Player service set to ", Player.instance);
 				scope.$close(res.data);
 			}, function(err) {
+				scope.loading = false;
+				scope.error = err.data;
 				console.log(err);
 			});
 		},
 		signup: function() {
-			console.log('Signup Player:', Player);
+			scope.error = null;
+			scope.loading = true;
 			$http.post('/player/' + Player.instance.uid + '/signup', {
 				uid: Player.instance.uid,
 				username: scope.username,
 				name: scope.username,
 				password: scope.password,
-				email: 'gamedev@mailinator.com',
+				email: scope.email,
 				captcha: 'unimplemented'
 			}).then(function(res) {
+				scope.loading = false;
 				console.log(res);
+				Player.instance = res.data;
+				console.log("Player service set to ", Player.instance);
+				scope.$close(res.data);
 			}, function(err) {
+				scope.loading = false;
+				scope.error = err.data;
 				console.log(err);
 			});
 		}
@@ -95,6 +103,8 @@ app.controller("LoginCtrl", ['$scope', 'socket', '$http', 'Player', function(sco
 app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', function(scope, socket, $http, $modal, Player) {
 	angular.extend(scope, {
 		player: null,
+		inventory: null,
+		stash: null,
 		loggedIn: false,
         debugObjects: []
 	});
@@ -108,23 +118,71 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 				backdrop: 'static'
 				//keyboard: false
 			}).result.then(function(data) {
+				scope.player = null;
+				scope.inventory.items = [];
+				scope.inventory = null;
+				scope.stash = null;
 				console.log("Modal data return", data);
 				scope.loadPlayer(data);
 				scope.loggedIn = true;
-				loginModal.close();
 			});
 			
 		},
 		
 		loadPlayer: function(player) {
-			player.inventory = 
+		    scope.inventory = new UiInventory(player.inventory, 32, [], [], [], scope.itemMovedEvent);
+		    scope.stash = new UiInventory(player.stash, 40, [], [], [], scope.itemMovedEvent);
+			scope.loadInventory(player);
+			scope.player = player;
 		},
+		
+		loadInventory: function(player) {
+			_.each(player.inventory.items, function(item) {
+				if(!item) return;
+				var uiItem = new UiItem(item.name, item);
+				console.log("Wrapped UiItem", uiItem);
+				scope.inventory.addItem(uiItem, item.locationIndex, true);
+			});
+		},
+		
+		resyncPlayer: function() {
+			$http.post('/player/resync', {
+				playerUid: scope.player.uid
+			}).then(function(res) {
+				scope.loadPlayer(res.data);
+			}, function(err) {
+				
+			});
+		},
+		
+		moveItem: function(player, item, from, fromIndex, to, toIndex) {
+			$http.post('/item/move', {
+				playerUid: player,
+				itemUid: item,
+				fromUid: from,
+				fromIndex: fromIndex,
+				toUid: to,
+				toIndex: toIndex
+			}).then(function(res) {
+				
+			}, function(err) {
+				if(err.status === 660) {
+					scope.resyncPlayer();
+					return;
+				}
+				console.log("Item moved");
+			});
+		},
+		
 		start: function() {
 			$http.post('/player/create')
 				.then(function(res) {
 					console.log('Create call:', res);
 					Player.instance = res.data;
-					scope.player = Player.instance;
+					scope.loadPlayer(res.data);
+					scope.$watch('inventory.items', function() {
+						console.log("Inventory changed", scope.inventory);
+					});
 					console.log("Scope player set to ", scope.player);
 				}, function(err) {
 					console.log(err);
@@ -145,29 +203,35 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 				});
 		},
 		clickDebug2: function() {
-			
+			console.log(scope.inventory);
 		},
 		clickDebug3: function() {
 			
-		}
+		},
+		itemMovedEvent: function(action, item, from, fromIndex, to, toIndex) {
+	    	if(!scope.player)
+	    		return;
+	    	console.log("Inventory has changed", arguments);
+	    	var fromUid = undefined;
+	    	if(from && from.inventoryModel)
+	    		fromUid = from.inventoryModel.uid;
+	    	scope.moveItem(scope.player.uid, item.serverItem.uid, fromUid, fromIndex, to.inventoryModel.uid, toIndex);
+	    }
 	});
 	
-    scope.inventory = new UiInventory(50, [], []);
-    scope.inv2 = new UiInventory(50, [], ["enchanted"]);
+    /*scope.inv2 = new UiInventory(50, [], ["enchanted"]);
     scope.back_pack = new UiInventory(9, [], []);
-    scope.stash = new UiInventory(10, [], []);
     scope.weapon_not_enchanted = new UiInventory(4, ['weapon'], ['enchanted']);
-    scope.weapon_enchanted = new UiInventory(4, ['weapon', 'enchanted'], ['axe']);
-    var sprite = "https://i.imgur.com/ngGK5MF.png";
+    scope.weapon_enchanted = new UiInventory(4, ['weapon', 'enchanted'], ['axe']);*/
 
-    scope.inventory.addItem(new UiItem("Sword", ["item", "weapon", "sword"], 0, -170, sprite));
+    /*scope.inventory.addItem(new UiItem("Sword", ["item", "weapon", "sword"], 0, -170, sprite));
     scope.inventory.addItem(new UiItem("Sword", ["item", "weapon", "sword"], 0, -170, sprite));
     scope.inventory.addItem(new UiItem("Fire Sword", ["item", "weapon", "sword", "enchanted"], -34, -952, sprite));
     scope.inventory.addItem(new UiItem("Axe", ["item", "weapon", "axe"], -170, -340, sprite));
-    scope.inventory.addItem(new UiItem("Fire Axe", ["item", "weapon", "axe", "enchanted"], -306, -340, sprite));
+    scope.inventory.addItem(new UiItem("Fire Axe", ["item", "weapon", "axe", "enchanted"], -306, -340, sprite));*/
 
     scope.r1 = 5;
-    scope.c1 = 5;
+    scope.c1 = 8;
 
 	console.log('Calling start');
 	scope.start();

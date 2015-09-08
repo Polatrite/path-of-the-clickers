@@ -1,4 +1,4 @@
-var uidManager = require(appRoot + '/server/UidManager.js');
+var uidManager = require(appRoot + '/shared/UidManager.js');
 
 var Affix = function(conf) {
 	_.extend(this, {
@@ -27,7 +27,7 @@ Affix.prototype.apply = function(item) {
 	}
 
 	affixArray.push(this);
-	this.location = item;
+	this.location = item.uid;
 	item.addStats(this.stats);
 
 	console.log("Applied " + this.toDebugString() + " to " + item.toDebugString());
@@ -36,7 +36,7 @@ Affix.prototype.apply = function(item) {
 }
 
 Affix.prototype.unapply = function() {
-	var item = this.location;
+	var item = $E(this.location);
 	if(!item) {
 		console.error(this.toDebugString() + " is not applied.");
 		return false;

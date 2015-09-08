@@ -13,6 +13,7 @@
 					<input ng-model="password" type="password" class="form-control"></input>
 				</div>
 			</div>
+			<div ng-show="error" class="alert alert-danger">{{error}}</div>
 		</div>
 		<div class="modal-footer">
 			<button ng-click="cancel()" ng-show="allowCancel" type="button" class="btn btn-default">Cancel</button>
@@ -20,7 +21,7 @@
 			<button ng-click="login()" type="button" class="btn btn-primary">Insta-Dan</button>
 			<button ng-click="login()" type="button" class="btn btn-primary">Insta-Jake</button>
 			<button ng-click="login()" type="button" class="btn btn-primary">Insta-Kyle</button>
-			<button ng-click="login()" type="button" class="btn btn-primary">Login</button>
+			<button ng-click="login()" ng-disabled="loading" type="button" class="btn btn-primary">Login</button>
 		</div>
 	</div>
 	
@@ -52,6 +53,6 @@
 		<div class="modal-footer">
 			<button ng-click="cancel()" ng-show="allowCancel" type="button" class="btn btn-default">Cancel</button>
 			<button ng-click="tab = 'login'" type="button" class="btn btn-primary pull-left">Login to Existing Account</button>
-			<button ng-click="signup()" type="button" class="btn btn-primary">Create</button>
+			<button ng-click="signup()" ng-disabled="loading" type="button" class="btn btn-primary">Create</button>
 		</div>
 	</div>

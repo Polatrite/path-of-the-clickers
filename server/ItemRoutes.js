@@ -1,9 +1,37 @@
 var express = require('express');
 var paperwork = require('paperwork');
 
-var uidManager = require(appRoot + '/server/UidManager.js');
+var uidManager = require(appRoot + '/shared/UidManager.js');
 
 var router = express.Router();
+
+router.post('/move', paperwork.accept({
+	playerUid: Number,
+	itemUid: Number,
+	fromUid: Number,
+	fromIndex: Number,
+	toUid: Number,
+	toIndex: Number
+}), function(req, res) {
+	var player = uidManager.get(req.body.playerUid);
+	var item = uidManager.get(req.body.itemUid);
+	var oldLocation = uidManager.get(req.body.fromUid);
+	var newLocation = uidManager.get(req.body.toUid);
+	
+	console.log(req.body, newLocation);
+	
+	if(item.location != oldLocation.uid ) {
+		res.send("Item's old location is incorrect", 660); //resync
+		return;
+	} else if(item.locationIndex != req.body.fromIndex) {
+		res.send("Item's old location index is incorrect", 660);
+		return;
+	}
+	
+	item.move(newLocation, req.body.toIndex);
+	player.save();
+	res.send(200);
+});
 
 router.post('/equip', paperwork.accept({
 	itemUid: String,

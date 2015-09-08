@@ -1,4 +1,4 @@
-var uidManager = require(appRoot + '/server/UidManager.js');
+var uidManager = require(appRoot + '/shared/UidManager.js');
 
 function Item(cfg) {
 	_.extend(this, {
@@ -8,6 +8,12 @@ function Item(cfg) {
 		name: '',
 		description: '',
 		tooltip: '',
+		
+		itemType: ['item'],
+		
+		spritesheet: 'img/items.png',
+		spriteX: 0,
+		spriteY: 0,
 		
 		equipmentSlot: '',
 		
@@ -43,7 +49,9 @@ function Item(cfg) {
 			perseverance: 0
 		},
 		
-		location: null
+		location: null,
+		locationIndex: -1,
+		equipped: null
 		
 	});
 
@@ -63,14 +71,15 @@ Item.prototype.equipOn = function(minion) {
 
 	minion.addStats(this.stats, minion.permanentStats);
 	minion.equipment[this.equipmentSlot] = this;
-	this.location = minion;
+	this.location = minion.uid;
+	this.equipped = this.equipmentSlot;
 
-	console.log(minion.toDebugString() + " equipped " + this.toDebugString(), minion);
+	console.log(minion.toDebugString() + " equipped " + this.toDebugString());
 	return true;
 }
 
 Item.prototype.unequip = function() {
-	var minion = this.location;
+	var minion = $E(this.location);
 	if(!minion) {
 		console.error(this.toDebugString() + " is not equipped.");
 		return false;
@@ -79,8 +88,35 @@ Item.prototype.unequip = function() {
 	minion.removeStats(this.stats, minion.permanentStats);
 	minion.equipment[this.equipmentSlot] = null;
 	this.location = null;
+	this.equipped = null;
 
 	console.log(minion.toDebugString() + " unequipped " + this.toDebugString());
+	return true;
+}
+
+Item.prototype.move = function(newLocation, newIndex) {
+	if(this.equipped) {
+		this.unequip();
+	}
+	
+	if(newLocation.entityType === 'Player') {
+		var player = newLocation;
+		if(this.location) {
+			$E(this.location).removeItem(this);
+		}
+		player.inventory.addItem(this, newIndex);
+		console.log(this.toDebugString() + " moved to " + player.toDebugString() + ".");
+	}
+	if(newLocation.entityType === 'Inventory') {
+		var inventory = newLocation;
+		if(this.location) {
+			$E(this.location).removeItem(this);
+		}
+		console.log(inventory);
+		inventory.addItem(this, newIndex);
+		console.log(this.toDebugString() + " moved to " + $E(inventory.location).toDebugString() + ".");
+	}
+	
 	return true;
 }
 
@@ -94,7 +130,7 @@ Item.prototype.addStats = function(stats) {
 		}
 	});
 	
-	var minion = this.location;
+	var minion = $E(this.location);
 	if(minion) {
 		minion.addStats(stats, minion.permanentStats);
 	}
@@ -112,7 +148,7 @@ Item.prototype.removeStats = function(stats) {
 		}
 	});
 
-	var minion = this.location;
+	var minion = $E(this.location);
 	if(minion) {
 		minion.removeStats(stats, minion.permanentStats);
 	}

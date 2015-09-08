@@ -5,7 +5,7 @@
  * @param {String[]}blacklist
  */
 
-module.exports = function UiInventory(size, whitelist, blacklist, items, changedCallback) {
+module.exports = function UiInventory(inventoryModel, size, whitelist, blacklist, items, changedCallback) {
     'use strict';
     /**
      * self reference for inner use
@@ -17,6 +17,7 @@ module.exports = function UiInventory(size, whitelist, blacklist, items, changed
      * @type {Array}
      */
     this.items = items || [];
+    this.inventoryModel = inventoryModel;
     
     /**
      * Callback that fires whenever the items have changed
@@ -174,7 +175,7 @@ module.exports = function UiInventory(size, whitelist, blacklist, items, changed
      * @param position Optional. The wanted position of the item in the inventory.
      * @returns {boolean|Item} False if not added. True if added. Item if added and the position was already taken. So the item of this position is returned.
      */
-    this.addItem = function (a_item, position) {
+    this.addItem = function (a_item, position, suppressCallback) {
 
         if (typeof position == "undefined" && !(that.get_empty_slot() >= 0)) {
             console.info("Inventory is full!", that, a_item);
@@ -235,7 +236,8 @@ console.log("other item");
                             toIndex: toIndex
                         };
 console.log("not exist deep dumb ", thing);
-                        that.changedCallback("moved", tmp_item, to, toIndex, from, fromIndex);
+                        if(!suppressCallback)
+                            that.changedCallback("moved", tmp_item, to, toIndex, from, fromIndex);
 console.log("not exist deep " + fromIndex + "," + toIndex);
                         ret = true;
                     } else {
@@ -280,7 +282,8 @@ console.log("pos null");
                     that.items[position] = a_item;
                     that.items[fromIndex] = tmp_item;
 console.log("exist deep");
-                    that.changedCallback("moved", tmp_item, that, position, that, fromIndex);
+                    if(!suppressCallback)
+                        that.changedCallback("moved", tmp_item, that, position, that, fromIndex);
                     toIndex = position;
                     ret = true;
                 }
@@ -288,7 +291,8 @@ console.log("exist deep");
         }
 
 console.log("end");
-        that.changedCallback("moved", a_item, from, fromIndex, to, toIndex);
+        if(!suppressCallback)
+            that.changedCallback("moved", a_item, from, fromIndex, to, toIndex);
         return ret;
     };
     /**

@@ -2,6 +2,7 @@ require('long-stack-traces');
 GLOBAL.appRoot = require('app-root-path');
 GLOBAL.Util = require(appRoot + '/shared/utilities.js');
 GLOBAL._ = require('underscore');
+GLOBAL.strf = require(appRoot + '/shared/strf.js');
 
 var express = require('express');
 var bodyParser = require('body-parser');

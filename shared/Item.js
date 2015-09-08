@@ -112,6 +112,7 @@ Item.prototype.move = function(newLocation, newIndex) {
 		if(this.location) {
 			$E(this.location).removeItem(this);
 		}
+		console.log(inventory);
 		inventory.addItem(this, newIndex);
 		console.log(this.toDebugString() + " moved to " + $E(inventory.location).toDebugString() + ".");
 	}

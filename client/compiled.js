@@ -380,7 +380,7 @@ module.exports = angular.module('simplifield.dragndrop', [])
  * @param {String[]}blacklist
  */
 
-module.exports = function UiInventory(size, whitelist, blacklist, items, changedCallback) {
+module.exports = function UiInventory(inventoryModel, size, whitelist, blacklist, items, changedCallback) {
     'use strict';
     /**
      * self reference for inner use
@@ -392,6 +392,7 @@ module.exports = function UiInventory(size, whitelist, blacklist, items, changed
      * @type {Array}
      */
     this.items = items || [];
+    this.inventoryModel = inventoryModel;
     
     /**
      * Callback that fires whenever the items have changed
@@ -549,7 +550,7 @@ module.exports = function UiInventory(size, whitelist, blacklist, items, changed
      * @param position Optional. The wanted position of the item in the inventory.
      * @returns {boolean|Item} False if not added. True if added. Item if added and the position was already taken. So the item of this position is returned.
      */
-    this.addItem = function (a_item, position) {
+    this.addItem = function (a_item, position, suppressCallback) {
 
         if (typeof position == "undefined" && !(that.get_empty_slot() >= 0)) {
             console.info("Inventory is full!", that, a_item);
@@ -610,7 +611,8 @@ console.log("other item");
                             toIndex: toIndex
                         };
 console.log("not exist deep dumb ", thing);
-                        that.changedCallback("moved", tmp_item, to, toIndex, from, fromIndex);
+                        if(!suppressCallback)
+                            that.changedCallback("moved", tmp_item, to, toIndex, from, fromIndex);
 console.log("not exist deep " + fromIndex + "," + toIndex);
                         ret = true;
                     } else {
@@ -655,7 +657,8 @@ console.log("pos null");
                     that.items[position] = a_item;
                     that.items[fromIndex] = tmp_item;
 console.log("exist deep");
-                    that.changedCallback("moved", tmp_item, that, position, that, fromIndex);
+                    if(!suppressCallback)
+                        that.changedCallback("moved", tmp_item, that, position, that, fromIndex);
                     toIndex = position;
                     ret = true;
                 }
@@ -663,7 +666,8 @@ console.log("exist deep");
         }
 
 console.log("end");
-        that.changedCallback("moved", a_item, from, fromIndex, to, toIndex);
+        if(!suppressCallback)
+            that.changedCallback("moved", a_item, from, fromIndex, to, toIndex);
         return ret;
     };
     /**
@@ -52768,6 +52772,7 @@ function toArray(list, index) {
 },{}],61:[function(require,module,exports){
 window.appRoot = '.';
 window._ = require('underscore');
+window.strf = require('../shared/strf.js');
 
 var angular = require('angular');
 var uiBootstrap = require('angular-ui-bootstrap');
@@ -52816,6 +52821,8 @@ app.factory('socket', function($rootScope) {
 
 app.controller("LoginCtrl", ['$scope', 'socket', '$http', 'Player', function(scope, socket, $http, Player) {
 	angular.extend(scope, {
+		error: null,
+		loading: false,
 		username: '',
 		password: '',
 		tab: 'login',
@@ -52823,30 +52830,42 @@ app.controller("LoginCtrl", ['$scope', 'socket', '$http', 'Player', function(sco
 	
 	angular.extend(scope, {
 		login: function() {
+			scope.error = null;
+			scope.loading = true;
 			$http.post('/player/login', {
 				username: scope.username,
 				password: scope.password
 			}).then(function(res) {
+				scope.loading = false;
 				console.log(res);
 				Player.instance = res.data;
 				console.log("Player service set to ", Player.instance);
 				scope.$close(res.data);
 			}, function(err) {
+				scope.loading = false;
+				scope.error = err.data;
 				console.log(err);
 			});
 		},
 		signup: function() {
-			console.log('Signup Player:', Player);
+			scope.error = null;
+			scope.loading = true;
 			$http.post('/player/' + Player.instance.uid + '/signup', {
 				uid: Player.instance.uid,
 				username: scope.username,
 				name: scope.username,
 				password: scope.password,
-				email: 'gamedev@mailinator.com',
+				email: scope.email,
 				captcha: 'unimplemented'
 			}).then(function(res) {
+				scope.loading = false;
 				console.log(res);
+				Player.instance = res.data;
+				console.log("Player service set to ", Player.instance);
+				scope.$close(res.data);
 			}, function(err) {
+				scope.loading = false;
+				scope.error = err.data;
 				console.log(err);
 			});
 		}
@@ -52856,6 +52875,8 @@ app.controller("LoginCtrl", ['$scope', 'socket', '$http', 'Player', function(sco
 app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', function(scope, socket, $http, $modal, Player) {
 	angular.extend(scope, {
 		player: null,
+		inventory: null,
+		stash: null,
 		loggedIn: false,
         debugObjects: []
 	});
@@ -52869,15 +52890,19 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 				backdrop: 'static'
 				//keyboard: false
 			}).result.then(function(data) {
+				scope.player = null;
+				scope.inventory.items = [];
+				scope.stash = null;
 				console.log("Modal data return", data);
 				scope.loadPlayer(data);
 				scope.loggedIn = true;
-				loginModal.close();
 			});
 			
 		},
 		
 		loadPlayer: function(player) {
+		    scope.inventory = new UiInventory(player.inventory, 32, [], [], [], scope.itemMovedEvent);
+		    scope.stash = new UiInventory(player.stash, 40, [], [], [], scope.itemMovedEvent);
 			scope.loadInventory(player);
 			scope.player = player;
 		},
@@ -52887,28 +52912,36 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 				if(!item) return;
 				var uiItem = new UiItem(item.name, item);
 				console.log("Wrapped UiItem", uiItem);
-				scope.inventory.addItem(uiItem, item.locationIndex);
+				scope.inventory.addItem(uiItem, item.locationIndex, true);
 			});
 		},
 		
-		updateInventory: function(player) {
-			var inventoryPost = [];
-			for(var i = 0; i < scope.inventory.items.length; i++) {
-				var uiItem = scope.inventory.items[i];
-				if(uiItem) {
-					inventoryPost.push({
-						uid: uiItem.serverItem.uid,
-						locationIndex: i
-					});
-				}
-			}
-			$http.post('/player/inventory/update', {
-				uid: player.uid,
-				inventory: inventoryPost
+		resyncPlayer: function() {
+			$http.post('/player/resync', {
+				playerUid: scope.player.uid
+			}).then(function(res) {
+				scope.loadPlayer(res.data);
+			}, function(err) {
+				
+			});
+		},
+		
+		moveItem: function(player, item, from, fromIndex, to, toIndex) {
+			$http.post('/item/move', {
+				playerUid: player,
+				itemUid: item,
+				fromUid: from,
+				fromIndex: fromIndex,
+				toUid: to,
+				toIndex: toIndex
 			}).then(function(res) {
 				
 			}, function(err) {
-				
+				if(err.status === 660) {
+					scope.resyncPlayer();
+					return;
+				}
+				console.log("Item moved");
 			});
 		},
 		
@@ -52945,21 +52978,18 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		},
 		clickDebug3: function() {
 			
-		}
+		},
+		itemMovedEvent: function(action, item, from, fromIndex, to, toIndex) {
+	    	if(!scope.player)
+	    		return;
+	    	console.log("Inventory has changed", arguments);
+	    	var fromUid = undefined;
+	    	if(from && from.inventoryModel)
+	    		fromUid = from.inventoryModel.uid;
+	    	scope.moveItem(scope.player.uid, item.serverItem.uid, fromUid, fromIndex, to.inventoryModel.uid, toIndex);
+	    }
 	});
 	
-    scope.inventory = new UiInventory(32, [], [], [], function(action, item, from, fromIndex, to, toIndex) {
-    	console.log("Inventory has changed", arguments);
-    	if(scope.player)
-    		scope.updateInventory(scope.player);
-    });
-    
-    scope.stash = new UiInventory(40, [], [], [], function(action, item, from, fromIndex, to, toIndex) {
-    	console.log("Stash has changed", arguments);
-    	if(scope.player)
-    		scope.updateInventory(scope.player);
-    });
-
     /*scope.inv2 = new UiInventory(50, [], ["enchanted"]);
     scope.back_pack = new UiInventory(9, [], []);
     scope.weapon_not_enchanted = new UiInventory(4, ['weapon'], ['enchanted']);
@@ -53054,4 +53084,64 @@ app.directive('scrollToLast', ['$location', '$anchorScroll', function($location,
 
 }]);
 
-},{"../client/lib/SupportlikDnD/dragInventory.js":1,"../client/lib/SupportlikDnD/uiInventory.js":3,"../client/lib/SupportlikDnD/uiItem.js":4,"angular":8,"angular-ui-bootstrap":5,"socket.io-client":10,"underscore":60}]},{},[61]);
+},{"../client/lib/SupportlikDnD/dragInventory.js":1,"../client/lib/SupportlikDnD/uiInventory.js":3,"../client/lib/SupportlikDnD/uiItem.js":4,"../shared/strf.js":62,"angular":8,"angular-ui-bootstrap":5,"socket.io-client":10,"underscore":60}],62:[function(require,module,exports){
+module.exports = function(str, ctx) {
+    var chars = str.split('');
+    var output = '';
+    var last = '';
+    var open_i = 0;
+    var open_c = 0;
+    var has_ctx = arguments.length > 1;
+    
+    for (var i = 0, l = chars.length; i < l; i++) {
+    	if (chars[i] == '[') {
+            if (last == '[' && open_i == i - 1) { 
+                open_c = 0;
+                output += '[';
+                last = '';
+                open_i = i + 1;
+            }
+            else {
+                if (!open_c) {
+                	output += str.slice(open_i, i);
+                    open_i = i;
+                }
+                open_c++;
+            }
+    	}
+    	else if (chars[i] == ']') {
+    		if (last == ']' && !open_c) {
+    			output += str.slice(open_i, i);
+    			open_i = i + 1;
+                last = '';
+            }
+            else if (open_c == 1) {
+            	try {
+            		if (has_ctx) {
+                  		output += eval('ctx.' + str.slice(open_i + 1, i));
+                  	}
+                  	else {
+                  		output += eval(str.slice(open_i + 1, i));
+                  	}
+                }
+                catch(e) {
+                }
+                open_c = 0;
+                open_i = i + 1;
+            }
+            else if (open_c > 0) {
+                open_c--;
+            }
+    	}
+        last = chars[i];
+    }
+    
+    if (open_c) {
+    	output += str.slice(open_i + 1);
+    }
+    else {
+    	output += last == ']' ? str.slice(open_i, -1) : str.slice(open_i);
+    }
+    return output;
+}
+},{}]},{},[61]);

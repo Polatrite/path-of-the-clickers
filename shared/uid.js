@@ -1,5 +1,5 @@
-var uidManager = require(appRoot + '/shared/UidManager.js');
+var UidManager = require(appRoot + '/shared/UidManager.js');
 
 module.exports = function(uid) {
-	return uidManager.get(uid);
+	return UidManager.get(uid);
 };

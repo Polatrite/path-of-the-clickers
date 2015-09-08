@@ -693,6 +693,12 @@ console.log("end");
             console.info("This item doesn't exists in this inventory: ", that, r_item);
         }
     }
+    
+    this.clear = function() {
+        for (var index = 0; index < that.items.length; index++) {
+            delete that.items[index];
+        }
+    }
 }
 
 },{}],4:[function(require,module,exports){
@@ -52771,6 +52777,7 @@ function toArray(list, index) {
 
 },{}],61:[function(require,module,exports){
 window.appRoot = '.';
+window.Util = require('../shared/utilities.js');
 window._ = require('underscore');
 window.strf = require('../shared/strf.js');
 
@@ -52875,12 +52882,11 @@ app.controller("LoginCtrl", ['$scope', 'socket', '$http', 'Player', function(sco
 app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', function(scope, socket, $http, $modal, Player) {
 	angular.extend(scope, {
 		player: null,
-		inventory: null,
-		stash: null,
+		inventory: new UiInventory(null, 40, [], [], [], scope.itemMovedEvent),
 		loggedIn: false,
         debugObjects: []
 	});
-	
+
 	angular.extend(scope, {
 		openLoginModal: function() {
 			var loginModal = $modal.open({
@@ -52890,9 +52896,6 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 				backdrop: 'static'
 				//keyboard: false
 			}).result.then(function(data) {
-				scope.player = null;
-				scope.inventory.items = [];
-				scope.stash = null;
 				console.log("Modal data return", data);
 				scope.loadPlayer(data);
 				scope.loggedIn = true;
@@ -52901,19 +52904,23 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		},
 		
 		loadPlayer: function(player) {
-		    scope.inventory = new UiInventory(player.inventory, 32, [], [], [], scope.itemMovedEvent);
-		    scope.stash = new UiInventory(player.stash, 40, [], [], [], scope.itemMovedEvent);
-			scope.loadInventory(player);
+			scope.player = null;
+			scope.loadInventory(player.inventory);
 			scope.player = player;
 		},
 		
-		loadInventory: function(player) {
-			_.each(player.inventory.items, function(item) {
+		loadInventory: function(inventory) {
+			console.log("Inventory before ", scope.inventory);
+			scope.inventory.clear();
+			scope.inventory.inventoryModel = inventory;
+			_.each(inventory.items, function(item) {
 				if(!item) return;
 				var uiItem = new UiItem(item.name, item);
 				console.log("Wrapped UiItem", uiItem);
 				scope.inventory.addItem(uiItem, item.locationIndex, true);
 			});
+			scope.inventory.changedCallback = scope.itemMovedEvent;
+			console.log("Inventory after ", scope.inventory);
 		},
 		
 		resyncPlayer: function() {
@@ -52979,6 +52986,23 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		clickDebug3: function() {
 			
 		},
+		
+		craft: function() {
+			var baseItemTypes = ['GlassShard', 'WoodenSword', 'BasicHatchet'];
+			var baseItemType = baseItemTypes.pick();
+			$http.post('/item/craft', {
+				playerUid: scope.player.uid,
+				baseItem: baseItemType,
+				components: []
+			}).then(function(res) {
+				if(res.data.inventory) {
+					scope.loadInventory(res.data.inventory);
+					console.log("Reloaded inventory");
+				}
+			}, function(err) {
+				console.error(err);
+			});
+		},
 		itemMovedEvent: function(action, item, from, fromIndex, to, toIndex) {
 	    	if(!scope.player)
 	    		return;
@@ -53001,10 +53025,6 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
     scope.inventory.addItem(new UiItem("Axe", ["item", "weapon", "axe"], -170, -340, sprite));
     scope.inventory.addItem(new UiItem("Fire Axe", ["item", "weapon", "axe", "enchanted"], -306, -340, sprite));*/
 
-    scope.r1 = 5;
-    scope.c1 = 8;
-
-	console.log('Calling start');
 	scope.start();
 }]);
 
@@ -53084,7 +53104,7 @@ app.directive('scrollToLast', ['$location', '$anchorScroll', function($location,
 
 }]);
 
-},{"../client/lib/SupportlikDnD/dragInventory.js":1,"../client/lib/SupportlikDnD/uiInventory.js":3,"../client/lib/SupportlikDnD/uiItem.js":4,"../shared/strf.js":62,"angular":8,"angular-ui-bootstrap":5,"socket.io-client":10,"underscore":60}],62:[function(require,module,exports){
+},{"../client/lib/SupportlikDnD/dragInventory.js":1,"../client/lib/SupportlikDnD/uiInventory.js":3,"../client/lib/SupportlikDnD/uiItem.js":4,"../shared/strf.js":62,"../shared/utilities.js":63,"angular":8,"angular-ui-bootstrap":5,"socket.io-client":10,"underscore":60}],62:[function(require,module,exports){
 module.exports = function(str, ctx) {
     var chars = str.split('');
     var output = '';
@@ -53144,4 +53164,149 @@ module.exports = function(str, ctx) {
     }
     return output;
 }
+},{}],63:[function(require,module,exports){
+if (!Object.prototype.toDebugString) {
+	Object.prototype.toDebugString = function() {
+		if(this.entityType && this.name) 
+			return this.entityType + '[' + this.name + ']';
+		else
+			return this.toString();
+	}
+}
+
+if (!Array.prototype.includes) {
+	Array.prototype.includes = function(searchElement /*, fromIndex*/ ) {
+		'use strict';
+		var O = Object(this);
+		var len = parseInt(O.length) || 0;
+		if (len === 0) {
+			return false;
+		}
+		var n = parseInt(arguments[1]) || 0;
+		var k;
+		if (n >= 0) {
+			k = n;
+		}
+		else {
+			k = len + n;
+			if (k < 0) {
+				k = 0;
+			}
+		}
+		var currentElement;
+		while (k < len) {
+			currentElement = O[k];
+			if (searchElement === currentElement ||
+				(searchElement !== searchElement && currentElement !== currentElement)) {
+				return true;
+			}
+			k++;
+		}
+		return false;
+	};
+}	
+if (!Array.prototype.includesUid) {
+	Array.prototype.includesUid = function(uid) {
+		'use strict';
+		var arr = Object(this);
+		for(var i = 0; i < arr.length; i++) {
+			if(arr[i] && arr[i].uid === uid) {
+				return i;
+			}
+		}
+		
+		return -1;
+	};
+}
+if (!Array.prototype.removeUid) {
+	Array.prototype.removeUid = function(uid, replace) {
+		'use strict';
+		if(replace === undefined) replace = null;
+		var arr = Object(this);
+		var found = false;
+		for(var i = 0; i < arr.length; i++) {
+			if(arr[i] && arr[i].uid === uid) {
+				arr[i] = replace;
+				found = true;
+			}
+		}
+		
+		return found;
+	};
+
+}
+
+if (!Array.prototype.remove) {
+	Array.prototype.remove = function(element) {
+		var index = this.indexOf(element);
+		this.splice(index, 1);
+		return this;
+	}
+}
+
+if (!Array.prototype.pick) {
+	Array.prototype.pick = function() {
+		var O = Object(this);
+		return O[Math.floor(Math.random()*this.length)];
+	}
+}
+
+if (!Math.randInt) {
+	Math.randInt = function(min, max) {
+		if(!min) min = 0;
+		if(!max) max = 100;
+		return Math.floor(Math.random() * (max - min) + min);
+	}
+}
+
+if (!Math.randInt) {
+	Math.randInt = function(min, max) {
+		if(!min) min = 0;
+		if(!max) max = 1;
+		return Math.random() * (max - min) + min;
+	}
+}
+
+function curr(value) {
+	return Number(value.toFixed(2));
+}
+
+function round(value) {
+	return Math.round(value);
+}
+
+function generateRandomName() {
+	var startWords = ["Legend", "Ace", "Action", "Adventure", "After", "Air", "Airbourne", "Alien",
+	"Alone", "Amazing", "Archon", "Armor", "Age", "Aqua",
+	"Balance", "Bad", "Battle", "Bandit",
+	"Barbarian", "Below", "Big", "Bio", "Black", "Blind", "Blood", "Blue", "Bomb", "Bomber", "Border",
+	"Brain", "Bubble", "Burn",
+	"Campaign", "Captain", "Car", "Castle", "Catacomb", "Chaos", "Chrono",
+	"Civil", "Cloud", "Cold", "Command", "Cool", "Creature", "Cyber", "Cockananny",
+	"Demon", "Daemon", "Dangerous", "Dark", "Defender", "Despair", "Die", "Death", "Dinosaur", "Donkey",
+	"Doom", "Down", "Dracula", "Dragon", "Dream", "Drug", "Duke", "Dungeon", "Doofy", "Derpy",
+	"Echo", "Earth", "Eagle", "Elder", "Emergency", "Empire", "Encounter", "Executive", "Eye", 
+	"Falcon", "Fade", "Face", "Fantasy", "Final", "Fast", "Field", "Fire", "Fleet", "Flying", "Forgotten",
+	"Groveling", "Grappling", "Gear",
+	"Lemming", "Legend", 
+	"Mooing",
+	"No no no",
+	"Polka", "Party", "Punk", "Pickle", "Paragon",
+	"Rotund",
+	"Squeamish",
+	"Turkey", "Turbulent", "Turbo", "Tricky"];
+	var middleWords = ["of the", "no", "and", "of", "vs.", "to"];
+	var endWords = ["Thunder", "Ball", "Puzzles", "Legions", "Viper", "Tentacle", "Death", "Descent", "Dungeon", "Dark", "Sun", "Moon", "Star", "Alien",
+	"Predator", "Tomorrow", "Today", "Vengeance", "Wake", "Rain", "Speed", "Blood", "Guts",
+	"Quest", "League", "Dragon", "Blade", "Sword", "Nodachi", "Simulator", "Fantasy", "Finale",
+	"Duck", "Hobbit", "Dwarf", "Emu", "Toad", "Dunce", "Whack", "Boogey", "Shuffle"];
+
+	var middleWord = "";
+	if(randInt(1,5) == 3) {
+		middleWord = middleWords.pick();
+	}
+	var name = startWords.pick() + " " + middleWord + (middleWord ? " " : "") + endWords.pick();
+	return name;
+}
+
 },{}]},{},[61]);

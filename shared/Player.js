@@ -8,13 +8,11 @@ var Player = function(conf) {
 		
 		username: '',
 		inventory: null,
-		stash: null,
 		minions: [],
 		money: 0
 	});
 	
-	this.inventory = new Inventory(32, this);
-	this.stash = new Inventory(40, this);
+	this.inventory = new Inventory(40, this);
 
 	_.extend(this, conf);
 }

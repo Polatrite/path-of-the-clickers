@@ -2,6 +2,8 @@ var express = require('express');
 var paperwork = require('paperwork');
 
 var uidManager = require(appRoot + '/shared/UidManager.js');
+var Item = require(appRoot + '/shared/Item.js');
+var BaseItem = require(appRoot + '/shared/BaseItem.js');
 
 var router = express.Router();
 
@@ -31,6 +33,33 @@ router.post('/move', paperwork.accept({
 	item.move(newLocation, req.body.toIndex);
 	player.save();
 	res.send(200);
+});
+
+router.post('/craft', paperwork.accept({
+	playerUid: Number,
+	baseItem: String,
+	components: [Number]
+}), function(req, res) {
+	var player = uidManager.get(req.body.playerUid);
+	var baseItemType = req.body.baseItem;
+	
+	if(!player) {
+		res.send("Player could not be found", 500);
+	}
+	if(BaseItem[baseItemType] === undefined) {
+		res.send("Invalid base item type", 500);
+		return;
+	}
+	
+	var item = new Item({
+		baseItem: baseItemType
+	});
+	item.move(player.inventory);
+	
+	res.send({
+		inventory: player.inventory,
+		item: item
+	});
 });
 
 router.post('/equip', paperwork.accept({

@@ -53,6 +53,7 @@ router.post('/craft', paperwork.accept({
 	
 	var item = new Item({
 		baseItem: baseItemType,
+		quality: ['normal', 'uncommon', 'magic', 'rare'].pick()
 	});
 	console.log(item.tooltip);
 	item.move(player.inventory);

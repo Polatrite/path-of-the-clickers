@@ -3,6 +3,8 @@ var changeCase = require('change-case')
 var uidManager = require(appRoot + '/shared/UidManager.js');
 var BaseItem = require(appRoot + '/shared/BaseItem.js');
 
+var ItemQualities = ['normal', 'uncommon', 'magic', 'rare'];
+
 function Item(cfg) {
 	_.extend(this, {
 		uid: uidManager.next(this),
@@ -23,6 +25,7 @@ function Item(cfg) {
 		equipmentSlot: '',
 		
 		level: 1,
+		quality: 'normal',
 		
 		affixes: {
 			primary: [],
@@ -73,7 +76,7 @@ function Item(cfg) {
 
 Item.prototype.getTooltip = function() {
 	var self = this;
-	this.tooltip = strf("<h2>[name]</h2><br>[changeCase.titleCase(baseItem)]<br>Level [level] [itemType[itemType.length-1]]<br>", this);
+	this.tooltip = strf("<h2 class='item-quality-[quality]'>[name]</h2>Level [level] [quality] [itemType[itemType.length-1]]<br>", this);
 	
 	_.each(this.stats, function(value, stat) {
 		if(value) {

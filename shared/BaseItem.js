@@ -45,6 +45,21 @@ var BaseItems = {
 			attackSpeed: 100,
 			critChance: 5,
 		}
+	},
+	'CrudeBow': {
+		name: 'Crude Bow',
+
+		itemType: ['item', 'weapon', 'bow'],
+		
+		spritesheet: spritesheet,
+		spriteX: 0,
+		spriteY: 11,
+		
+		stats: {
+			attack: 12, // 49 dps
+			attackSpeed: 90,
+			critChance: 5,
+		}
 	}
 }
 

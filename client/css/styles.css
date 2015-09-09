@@ -54,6 +54,26 @@ h2 {
     background-color: #DDDDDD;
 }
 
+.inventory-tooltip {
+    max-width: 420px;
+}
+
+.item-quality-normal {
+    color: white;
+}
+
+.item-quality-uncommon {
+    color: green;
+}
+
+.item-quality-magic {
+    color: blue;
+}
+
+.item-quality-rare {
+    color: goldenrod;
+}
+
 .btn-upgrade {
     padding: 2px 4px;
 }

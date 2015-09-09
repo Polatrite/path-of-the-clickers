@@ -215,7 +215,7 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		},
 		
 		craft: function() {
-			var baseItemTypes = ['GlassShard', 'WoodenSword', 'BasicHatchet'];
+			var baseItemTypes = ['GlassShard', 'WoodenSword', 'BasicHatchet', 'CrudeBow'];
 			var baseItemType = baseItemTypes.pick();
 			$http.post('/item/craft', {
 				playerUid: scope.player.uid,
@@ -230,6 +230,7 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 				console.error(err);
 			});
 		},
+		
 		itemMovedEvent: function(action, item, from, fromIndex, to, toIndex) {
 	    	if(!scope.player)
 	    		return;

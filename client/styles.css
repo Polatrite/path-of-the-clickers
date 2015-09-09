@@ -68,6 +68,10 @@ h2 {
     margin-bottom: 4px;
 }
 
+.tooltip {
+    pointer-events: none;
+}
+
 .tooltip-inner {
     white-space:pre-wrap;
     max-width: 500px;

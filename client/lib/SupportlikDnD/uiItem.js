@@ -21,12 +21,14 @@ module.exports = function UiItem(name, serverItem) {
      * name of the item
      * @type {String}
      */
-    this.name = name;
+    this.name = serverItem.name;
     /**
      * Tags of the item.
      * @type {String[]}
      */
     this.tags = serverItem.itemType;
+    
+    this.tooltip = serverItem.tooltip;
     /**
      *
      * @type {Inventory}

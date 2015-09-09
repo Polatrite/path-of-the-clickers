@@ -32,13 +32,13 @@ var BaseItems = {
 		}
 	},
 	'BasicHatchet': {
-		name: 'BasicHatchet',
+		name: 'Basic Hatchet',
 
 		itemType: ['item', 'weapon', 'axe'],
 		
 		spritesheet: spritesheet,
 		spriteX: 0,
-		spriteY: 11,
+		spriteY: 10,
 		
 		stats: {
 			attack: 11, // 49 dps

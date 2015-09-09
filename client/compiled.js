@@ -134,7 +134,7 @@ module.exports = angular.module("dragInventory", [simplifiedDnD.name]).
             }
         };
     }]);
-},{"./sf-drag.js":2,"angular":8,"jquery":9}],2:[function(require,module,exports){
+},{"./sf-drag.js":2,"angular":10,"jquery":11}],2:[function(require,module,exports){
 var angular = require('angular');
 var $ = require('jquery');
 
@@ -372,7 +372,7 @@ module.exports = angular.module('simplifield.dragndrop', [])
     }
   ]);
 
-},{"angular":8,"jquery":9}],3:[function(require,module,exports){
+},{"angular":10,"jquery":11}],3:[function(require,module,exports){
 /**
  *
  * @param {Number} size
@@ -725,12 +725,14 @@ module.exports = function UiItem(name, serverItem) {
      * name of the item
      * @type {String}
      */
-    this.name = name;
+    this.name = serverItem.name;
     /**
      * Tags of the item.
      * @type {String[]}
      */
     this.tags = serverItem.itemType;
+    
+    this.tooltip = serverItem.tooltip;
     /**
      *
      * @type {Inventory}
@@ -803,10 +805,699 @@ module.exports = function UiItem(name, serverItem) {
 }
 
 },{}],5:[function(require,module,exports){
+/**
+ * @license AngularJS v1.4.5
+ * (c) 2010-2015 Google, Inc. http://angularjs.org
+ * License: MIT
+ */
+(function(window, angular, undefined) {'use strict';
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *     Any commits to this file should be reviewed with security in mind.  *
+ *   Changes to this file can potentially create security vulnerabilities. *
+ *          An approval from 2 Core members with history of modifying      *
+ *                         this file is required.                          *
+ *                                                                         *
+ *  Does the change somehow allow for arbitrary javascript to be executed? *
+ *    Or allows for someone to change the prototype of built-in objects?   *
+ *     Or gives undesired access to variables likes document or window?    *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+var $sanitizeMinErr = angular.$$minErr('$sanitize');
+
+/**
+ * @ngdoc module
+ * @name ngSanitize
+ * @description
+ *
+ * # ngSanitize
+ *
+ * The `ngSanitize` module provides functionality to sanitize HTML.
+ *
+ *
+ * <div doc-module-components="ngSanitize"></div>
+ *
+ * See {@link ngSanitize.$sanitize `$sanitize`} for usage.
+ */
+
+/*
+ * HTML Parser By Misko Hevery (misko@hevery.com)
+ * based on:  HTML Parser By John Resig (ejohn.org)
+ * Original code by Erik Arvidsson, Mozilla Public License
+ * http://erik.eae.net/simplehtmlparser/simplehtmlparser.js
+ *
+ * // Use like so:
+ * htmlParser(htmlString, {
+ *     start: function(tag, attrs, unary) {},
+ *     end: function(tag) {},
+ *     chars: function(text) {},
+ *     comment: function(text) {}
+ * });
+ *
+ */
+
+
+/**
+ * @ngdoc service
+ * @name $sanitize
+ * @kind function
+ *
+ * @description
+ *   The input is sanitized by parsing the HTML into tokens. All safe tokens (from a whitelist) are
+ *   then serialized back to properly escaped html string. This means that no unsafe input can make
+ *   it into the returned string, however, since our parser is more strict than a typical browser
+ *   parser, it's possible that some obscure input, which would be recognized as valid HTML by a
+ *   browser, won't make it through the sanitizer. The input may also contain SVG markup.
+ *   The whitelist is configured using the functions `aHrefSanitizationWhitelist` and
+ *   `imgSrcSanitizationWhitelist` of {@link ng.$compileProvider `$compileProvider`}.
+ *
+ * @param {string} html HTML input.
+ * @returns {string} Sanitized HTML.
+ *
+ * @example
+   <example module="sanitizeExample" deps="angular-sanitize.js">
+   <file name="index.html">
+     <script>
+         angular.module('sanitizeExample', ['ngSanitize'])
+           .controller('ExampleController', ['$scope', '$sce', function($scope, $sce) {
+             $scope.snippet =
+               '<p style="color:blue">an html\n' +
+               '<em onmouseover="this.textContent=\'PWN3D!\'">click here</em>\n' +
+               'snippet</p>';
+             $scope.deliberatelyTrustDangerousSnippet = function() {
+               return $sce.trustAsHtml($scope.snippet);
+             };
+           }]);
+     </script>
+     <div ng-controller="ExampleController">
+        Snippet: <textarea ng-model="snippet" cols="60" rows="3"></textarea>
+       <table>
+         <tr>
+           <td>Directive</td>
+           <td>How</td>
+           <td>Source</td>
+           <td>Rendered</td>
+         </tr>
+         <tr id="bind-html-with-sanitize">
+           <td>ng-bind-html</td>
+           <td>Automatically uses $sanitize</td>
+           <td><pre>&lt;div ng-bind-html="snippet"&gt;<br/>&lt;/div&gt;</pre></td>
+           <td><div ng-bind-html="snippet"></div></td>
+         </tr>
+         <tr id="bind-html-with-trust">
+           <td>ng-bind-html</td>
+           <td>Bypass $sanitize by explicitly trusting the dangerous value</td>
+           <td>
+           <pre>&lt;div ng-bind-html="deliberatelyTrustDangerousSnippet()"&gt;
+&lt;/div&gt;</pre>
+           </td>
+           <td><div ng-bind-html="deliberatelyTrustDangerousSnippet()"></div></td>
+         </tr>
+         <tr id="bind-default">
+           <td>ng-bind</td>
+           <td>Automatically escapes</td>
+           <td><pre>&lt;div ng-bind="snippet"&gt;<br/>&lt;/div&gt;</pre></td>
+           <td><div ng-bind="snippet"></div></td>
+         </tr>
+       </table>
+       </div>
+   </file>
+   <file name="protractor.js" type="protractor">
+     it('should sanitize the html snippet by default', function() {
+       expect(element(by.css('#bind-html-with-sanitize div')).getInnerHtml()).
+         toBe('<p>an html\n<em>click here</em>\nsnippet</p>');
+     });
+
+     it('should inline raw snippet if bound to a trusted value', function() {
+       expect(element(by.css('#bind-html-with-trust div')).getInnerHtml()).
+         toBe("<p style=\"color:blue\">an html\n" +
+              "<em onmouseover=\"this.textContent='PWN3D!'\">click here</em>\n" +
+              "snippet</p>");
+     });
+
+     it('should escape snippet without any filter', function() {
+       expect(element(by.css('#bind-default div')).getInnerHtml()).
+         toBe("&lt;p style=\"color:blue\"&gt;an html\n" +
+              "&lt;em onmouseover=\"this.textContent='PWN3D!'\"&gt;click here&lt;/em&gt;\n" +
+              "snippet&lt;/p&gt;");
+     });
+
+     it('should update', function() {
+       element(by.model('snippet')).clear();
+       element(by.model('snippet')).sendKeys('new <b onclick="alert(1)">text</b>');
+       expect(element(by.css('#bind-html-with-sanitize div')).getInnerHtml()).
+         toBe('new <b>text</b>');
+       expect(element(by.css('#bind-html-with-trust div')).getInnerHtml()).toBe(
+         'new <b onclick="alert(1)">text</b>');
+       expect(element(by.css('#bind-default div')).getInnerHtml()).toBe(
+         "new &lt;b onclick=\"alert(1)\"&gt;text&lt;/b&gt;");
+     });
+   </file>
+   </example>
+ */
+function $SanitizeProvider() {
+  this.$get = ['$$sanitizeUri', function($$sanitizeUri) {
+    return function(html) {
+      var buf = [];
+      htmlParser(html, htmlSanitizeWriter(buf, function(uri, isImage) {
+        return !/^unsafe/.test($$sanitizeUri(uri, isImage));
+      }));
+      return buf.join('');
+    };
+  }];
+}
+
+function sanitizeText(chars) {
+  var buf = [];
+  var writer = htmlSanitizeWriter(buf, angular.noop);
+  writer.chars(chars);
+  return buf.join('');
+}
+
+
+// Regular Expressions for parsing tags and attributes
+var START_TAG_REGEXP =
+       /^<((?:[a-zA-Z])[\w:-]*)((?:\s+[\w:-]+(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+))?)*)\s*(\/?)\s*(>?)/,
+  END_TAG_REGEXP = /^<\/\s*([\w:-]+)[^>]*>/,
+  ATTR_REGEXP = /([\w:-]+)(?:\s*=\s*(?:(?:"((?:[^"])*)")|(?:'((?:[^'])*)')|([^>\s]+)))?/g,
+  BEGIN_TAG_REGEXP = /^</,
+  BEGING_END_TAGE_REGEXP = /^<\//,
+  COMMENT_REGEXP = /<!--(.*?)-->/g,
+  DOCTYPE_REGEXP = /<!DOCTYPE([^>]*?)>/i,
+  CDATA_REGEXP = /<!\[CDATA\[(.*?)]]>/g,
+  SURROGATE_PAIR_REGEXP = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g,
+  // Match everything outside of normal chars and " (quote character)
+  NON_ALPHANUMERIC_REGEXP = /([^\#-~| |!])/g;
+
+
+// Good source of info about elements and attributes
+// http://dev.w3.org/html5/spec/Overview.html#semantics
+// http://simon.html5.org/html-elements
+
+// Safe Void Elements - HTML5
+// http://dev.w3.org/html5/spec/Overview.html#void-elements
+var voidElements = makeMap("area,br,col,hr,img,wbr");
+
+// Elements that you can, intentionally, leave open (and which close themselves)
+// http://dev.w3.org/html5/spec/Overview.html#optional-tags
+var optionalEndTagBlockElements = makeMap("colgroup,dd,dt,li,p,tbody,td,tfoot,th,thead,tr"),
+    optionalEndTagInlineElements = makeMap("rp,rt"),
+    optionalEndTagElements = angular.extend({},
+                                            optionalEndTagInlineElements,
+                                            optionalEndTagBlockElements);
+
+// Safe Block Elements - HTML5
+var blockElements = angular.extend({}, optionalEndTagBlockElements, makeMap("address,article," +
+        "aside,blockquote,caption,center,del,dir,div,dl,figure,figcaption,footer,h1,h2,h3,h4,h5," +
+        "h6,header,hgroup,hr,ins,map,menu,nav,ol,pre,script,section,table,ul"));
+
+// Inline Elements - HTML5
+var inlineElements = angular.extend({}, optionalEndTagInlineElements, makeMap("a,abbr,acronym,b," +
+        "bdi,bdo,big,br,cite,code,del,dfn,em,font,i,img,ins,kbd,label,map,mark,q,ruby,rp,rt,s," +
+        "samp,small,span,strike,strong,sub,sup,time,tt,u,var"));
+
+// SVG Elements
+// https://wiki.whatwg.org/wiki/Sanitization_rules#svg_Elements
+// Note: the elements animate,animateColor,animateMotion,animateTransform,set are intentionally omitted.
+// They can potentially allow for arbitrary javascript to be executed. See #11290
+var svgElements = makeMap("circle,defs,desc,ellipse,font-face,font-face-name,font-face-src,g,glyph," +
+        "hkern,image,linearGradient,line,marker,metadata,missing-glyph,mpath,path,polygon,polyline," +
+        "radialGradient,rect,stop,svg,switch,text,title,tspan,use");
+
+// Special Elements (can contain anything)
+var specialElements = makeMap("script,style");
+
+var validElements = angular.extend({},
+                                   voidElements,
+                                   blockElements,
+                                   inlineElements,
+                                   optionalEndTagElements,
+                                   svgElements);
+
+//Attributes that have href and hence need to be sanitized
+var uriAttrs = makeMap("background,cite,href,longdesc,src,usemap,xlink:href");
+
+var htmlAttrs = makeMap('abbr,align,alt,axis,bgcolor,border,cellpadding,cellspacing,class,clear,' +
+    'color,cols,colspan,compact,coords,dir,face,headers,height,hreflang,hspace,' +
+    'ismap,lang,language,nohref,nowrap,rel,rev,rows,rowspan,rules,' +
+    'scope,scrolling,shape,size,span,start,summary,tabindex,target,title,type,' +
+    'valign,value,vspace,width');
+
+// SVG attributes (without "id" and "name" attributes)
+// https://wiki.whatwg.org/wiki/Sanitization_rules#svg_Attributes
+var svgAttrs = makeMap('accent-height,accumulate,additive,alphabetic,arabic-form,ascent,' +
+    'baseProfile,bbox,begin,by,calcMode,cap-height,class,color,color-rendering,content,' +
+    'cx,cy,d,dx,dy,descent,display,dur,end,fill,fill-rule,font-family,font-size,font-stretch,' +
+    'font-style,font-variant,font-weight,from,fx,fy,g1,g2,glyph-name,gradientUnits,hanging,' +
+    'height,horiz-adv-x,horiz-origin-x,ideographic,k,keyPoints,keySplines,keyTimes,lang,' +
+    'marker-end,marker-mid,marker-start,markerHeight,markerUnits,markerWidth,mathematical,' +
+    'max,min,offset,opacity,orient,origin,overline-position,overline-thickness,panose-1,' +
+    'path,pathLength,points,preserveAspectRatio,r,refX,refY,repeatCount,repeatDur,' +
+    'requiredExtensions,requiredFeatures,restart,rotate,rx,ry,slope,stemh,stemv,stop-color,' +
+    'stop-opacity,strikethrough-position,strikethrough-thickness,stroke,stroke-dasharray,' +
+    'stroke-dashoffset,stroke-linecap,stroke-linejoin,stroke-miterlimit,stroke-opacity,' +
+    'stroke-width,systemLanguage,target,text-anchor,to,transform,type,u1,u2,underline-position,' +
+    'underline-thickness,unicode,unicode-range,units-per-em,values,version,viewBox,visibility,' +
+    'width,widths,x,x-height,x1,x2,xlink:actuate,xlink:arcrole,xlink:role,xlink:show,xlink:title,' +
+    'xlink:type,xml:base,xml:lang,xml:space,xmlns,xmlns:xlink,y,y1,y2,zoomAndPan', true);
+
+var validAttrs = angular.extend({},
+                                uriAttrs,
+                                svgAttrs,
+                                htmlAttrs);
+
+function makeMap(str, lowercaseKeys) {
+  var obj = {}, items = str.split(','), i;
+  for (i = 0; i < items.length; i++) {
+    obj[lowercaseKeys ? angular.lowercase(items[i]) : items[i]] = true;
+  }
+  return obj;
+}
+
+
+/**
+ * @example
+ * htmlParser(htmlString, {
+ *     start: function(tag, attrs, unary) {},
+ *     end: function(tag) {},
+ *     chars: function(text) {},
+ *     comment: function(text) {}
+ * });
+ *
+ * @param {string} html string
+ * @param {object} handler
+ */
+function htmlParser(html, handler) {
+  if (typeof html !== 'string') {
+    if (html === null || typeof html === 'undefined') {
+      html = '';
+    } else {
+      html = '' + html;
+    }
+  }
+  var index, chars, match, stack = [], last = html, text;
+  stack.last = function() { return stack[stack.length - 1]; };
+
+  while (html) {
+    text = '';
+    chars = true;
+
+    // Make sure we're not in a script or style element
+    if (!stack.last() || !specialElements[stack.last()]) {
+
+      // Comment
+      if (html.indexOf("<!--") === 0) {
+        // comments containing -- are not allowed unless they terminate the comment
+        index = html.indexOf("--", 4);
+
+        if (index >= 0 && html.lastIndexOf("-->", index) === index) {
+          if (handler.comment) handler.comment(html.substring(4, index));
+          html = html.substring(index + 3);
+          chars = false;
+        }
+      // DOCTYPE
+      } else if (DOCTYPE_REGEXP.test(html)) {
+        match = html.match(DOCTYPE_REGEXP);
+
+        if (match) {
+          html = html.replace(match[0], '');
+          chars = false;
+        }
+      // end tag
+      } else if (BEGING_END_TAGE_REGEXP.test(html)) {
+        match = html.match(END_TAG_REGEXP);
+
+        if (match) {
+          html = html.substring(match[0].length);
+          match[0].replace(END_TAG_REGEXP, parseEndTag);
+          chars = false;
+        }
+
+      // start tag
+      } else if (BEGIN_TAG_REGEXP.test(html)) {
+        match = html.match(START_TAG_REGEXP);
+
+        if (match) {
+          // We only have a valid start-tag if there is a '>'.
+          if (match[4]) {
+            html = html.substring(match[0].length);
+            match[0].replace(START_TAG_REGEXP, parseStartTag);
+          }
+          chars = false;
+        } else {
+          // no ending tag found --- this piece should be encoded as an entity.
+          text += '<';
+          html = html.substring(1);
+        }
+      }
+
+      if (chars) {
+        index = html.indexOf("<");
+
+        text += index < 0 ? html : html.substring(0, index);
+        html = index < 0 ? "" : html.substring(index);
+
+        if (handler.chars) handler.chars(decodeEntities(text));
+      }
+
+    } else {
+      // IE versions 9 and 10 do not understand the regex '[^]', so using a workaround with [\W\w].
+      html = html.replace(new RegExp("([\\W\\w]*)<\\s*\\/\\s*" + stack.last() + "[^>]*>", 'i'),
+        function(all, text) {
+          text = text.replace(COMMENT_REGEXP, "$1").replace(CDATA_REGEXP, "$1");
+
+          if (handler.chars) handler.chars(decodeEntities(text));
+
+          return "";
+      });
+
+      parseEndTag("", stack.last());
+    }
+
+    if (html == last) {
+      throw $sanitizeMinErr('badparse', "The sanitizer was unable to parse the following block " +
+                                        "of html: {0}", html);
+    }
+    last = html;
+  }
+
+  // Clean up any remaining tags
+  parseEndTag();
+
+  function parseStartTag(tag, tagName, rest, unary) {
+    tagName = angular.lowercase(tagName);
+    if (blockElements[tagName]) {
+      while (stack.last() && inlineElements[stack.last()]) {
+        parseEndTag("", stack.last());
+      }
+    }
+
+    if (optionalEndTagElements[tagName] && stack.last() == tagName) {
+      parseEndTag("", tagName);
+    }
+
+    unary = voidElements[tagName] || !!unary;
+
+    if (!unary) {
+      stack.push(tagName);
+    }
+
+    var attrs = {};
+
+    rest.replace(ATTR_REGEXP,
+      function(match, name, doubleQuotedValue, singleQuotedValue, unquotedValue) {
+        var value = doubleQuotedValue
+          || singleQuotedValue
+          || unquotedValue
+          || '';
+
+        attrs[name] = decodeEntities(value);
+    });
+    if (handler.start) handler.start(tagName, attrs, unary);
+  }
+
+  function parseEndTag(tag, tagName) {
+    var pos = 0, i;
+    tagName = angular.lowercase(tagName);
+    if (tagName) {
+      // Find the closest opened tag of the same type
+      for (pos = stack.length - 1; pos >= 0; pos--) {
+        if (stack[pos] == tagName) break;
+      }
+    }
+
+    if (pos >= 0) {
+      // Close all the open elements, up the stack
+      for (i = stack.length - 1; i >= pos; i--)
+        if (handler.end) handler.end(stack[i]);
+
+      // Remove the open elements from the stack
+      stack.length = pos;
+    }
+  }
+}
+
+var hiddenPre=document.createElement("pre");
+/**
+ * decodes all entities into regular string
+ * @param value
+ * @returns {string} A string with decoded entities.
+ */
+function decodeEntities(value) {
+  if (!value) { return ''; }
+
+  hiddenPre.innerHTML = value.replace(/</g,"&lt;");
+  // innerText depends on styling as it doesn't display hidden elements.
+  // Therefore, it's better to use textContent not to cause unnecessary reflows.
+  return hiddenPre.textContent;
+}
+
+/**
+ * Escapes all potentially dangerous characters, so that the
+ * resulting string can be safely inserted into attribute or
+ * element text.
+ * @param value
+ * @returns {string} escaped text
+ */
+function encodeEntities(value) {
+  return value.
+    replace(/&/g, '&amp;').
+    replace(SURROGATE_PAIR_REGEXP, function(value) {
+      var hi = value.charCodeAt(0);
+      var low = value.charCodeAt(1);
+      return '&#' + (((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000) + ';';
+    }).
+    replace(NON_ALPHANUMERIC_REGEXP, function(value) {
+      return '&#' + value.charCodeAt(0) + ';';
+    }).
+    replace(/</g, '&lt;').
+    replace(/>/g, '&gt;');
+}
+
+/**
+ * create an HTML/XML writer which writes to buffer
+ * @param {Array} buf use buf.jain('') to get out sanitized html string
+ * @returns {object} in the form of {
+ *     start: function(tag, attrs, unary) {},
+ *     end: function(tag) {},
+ *     chars: function(text) {},
+ *     comment: function(text) {}
+ * }
+ */
+function htmlSanitizeWriter(buf, uriValidator) {
+  var ignore = false;
+  var out = angular.bind(buf, buf.push);
+  return {
+    start: function(tag, attrs, unary) {
+      tag = angular.lowercase(tag);
+      if (!ignore && specialElements[tag]) {
+        ignore = tag;
+      }
+      if (!ignore && validElements[tag] === true) {
+        out('<');
+        out(tag);
+        angular.forEach(attrs, function(value, key) {
+          var lkey=angular.lowercase(key);
+          var isImage = (tag === 'img' && lkey === 'src') || (lkey === 'background');
+          if (validAttrs[lkey] === true &&
+            (uriAttrs[lkey] !== true || uriValidator(value, isImage))) {
+            out(' ');
+            out(key);
+            out('="');
+            out(encodeEntities(value));
+            out('"');
+          }
+        });
+        out(unary ? '/>' : '>');
+      }
+    },
+    end: function(tag) {
+        tag = angular.lowercase(tag);
+        if (!ignore && validElements[tag] === true) {
+          out('</');
+          out(tag);
+          out('>');
+        }
+        if (tag == ignore) {
+          ignore = false;
+        }
+      },
+    chars: function(chars) {
+        if (!ignore) {
+          out(encodeEntities(chars));
+        }
+      }
+  };
+}
+
+
+// define ngSanitize module and register $sanitize service
+angular.module('ngSanitize', []).provider('$sanitize', $SanitizeProvider);
+
+/* global sanitizeText: false */
+
+/**
+ * @ngdoc filter
+ * @name linky
+ * @kind function
+ *
+ * @description
+ * Finds links in text input and turns them into html links. Supports http/https/ftp/mailto and
+ * plain email address links.
+ *
+ * Requires the {@link ngSanitize `ngSanitize`} module to be installed.
+ *
+ * @param {string} text Input text.
+ * @param {string} target Window (_blank|_self|_parent|_top) or named frame to open links in.
+ * @returns {string} Html-linkified text.
+ *
+ * @usage
+   <span ng-bind-html="linky_expression | linky"></span>
+ *
+ * @example
+   <example module="linkyExample" deps="angular-sanitize.js">
+     <file name="index.html">
+       <script>
+         angular.module('linkyExample', ['ngSanitize'])
+           .controller('ExampleController', ['$scope', function($scope) {
+             $scope.snippet =
+               'Pretty text with some links:\n'+
+               'http://angularjs.org/,\n'+
+               'mailto:us@somewhere.org,\n'+
+               'another@somewhere.org,\n'+
+               'and one more: ftp://127.0.0.1/.';
+             $scope.snippetWithTarget = 'http://angularjs.org/';
+           }]);
+       </script>
+       <div ng-controller="ExampleController">
+       Snippet: <textarea ng-model="snippet" cols="60" rows="3"></textarea>
+       <table>
+         <tr>
+           <td>Filter</td>
+           <td>Source</td>
+           <td>Rendered</td>
+         </tr>
+         <tr id="linky-filter">
+           <td>linky filter</td>
+           <td>
+             <pre>&lt;div ng-bind-html="snippet | linky"&gt;<br>&lt;/div&gt;</pre>
+           </td>
+           <td>
+             <div ng-bind-html="snippet | linky"></div>
+           </td>
+         </tr>
+         <tr id="linky-target">
+          <td>linky target</td>
+          <td>
+            <pre>&lt;div ng-bind-html="snippetWithTarget | linky:'_blank'"&gt;<br>&lt;/div&gt;</pre>
+          </td>
+          <td>
+            <div ng-bind-html="snippetWithTarget | linky:'_blank'"></div>
+          </td>
+         </tr>
+         <tr id="escaped-html">
+           <td>no filter</td>
+           <td><pre>&lt;div ng-bind="snippet"&gt;<br>&lt;/div&gt;</pre></td>
+           <td><div ng-bind="snippet"></div></td>
+         </tr>
+       </table>
+     </file>
+     <file name="protractor.js" type="protractor">
+       it('should linkify the snippet with urls', function() {
+         expect(element(by.id('linky-filter')).element(by.binding('snippet | linky')).getText()).
+             toBe('Pretty text with some links: http://angularjs.org/, us@somewhere.org, ' +
+                  'another@somewhere.org, and one more: ftp://127.0.0.1/.');
+         expect(element.all(by.css('#linky-filter a')).count()).toEqual(4);
+       });
+
+       it('should not linkify snippet without the linky filter', function() {
+         expect(element(by.id('escaped-html')).element(by.binding('snippet')).getText()).
+             toBe('Pretty text with some links: http://angularjs.org/, mailto:us@somewhere.org, ' +
+                  'another@somewhere.org, and one more: ftp://127.0.0.1/.');
+         expect(element.all(by.css('#escaped-html a')).count()).toEqual(0);
+       });
+
+       it('should update', function() {
+         element(by.model('snippet')).clear();
+         element(by.model('snippet')).sendKeys('new http://link.');
+         expect(element(by.id('linky-filter')).element(by.binding('snippet | linky')).getText()).
+             toBe('new http://link.');
+         expect(element.all(by.css('#linky-filter a')).count()).toEqual(1);
+         expect(element(by.id('escaped-html')).element(by.binding('snippet')).getText())
+             .toBe('new http://link.');
+       });
+
+       it('should work with the target property', function() {
+        expect(element(by.id('linky-target')).
+            element(by.binding("snippetWithTarget | linky:'_blank'")).getText()).
+            toBe('http://angularjs.org/');
+        expect(element(by.css('#linky-target a')).getAttribute('target')).toEqual('_blank');
+       });
+     </file>
+   </example>
+ */
+angular.module('ngSanitize').filter('linky', ['$sanitize', function($sanitize) {
+  var LINKY_URL_REGEXP =
+        /((ftp|https?):\/\/|(www\.)|(mailto:)?[A-Za-z0-9._%+-]+@)\S*[^\s.;,(){}<>"\u201d\u2019]/i,
+      MAILTO_REGEXP = /^mailto:/i;
+
+  return function(text, target) {
+    if (!text) return text;
+    var match;
+    var raw = text;
+    var html = [];
+    var url;
+    var i;
+    while ((match = raw.match(LINKY_URL_REGEXP))) {
+      // We can not end in these as they are sometimes found at the end of the sentence
+      url = match[0];
+      // if we did not match ftp/http/www/mailto then assume mailto
+      if (!match[2] && !match[4]) {
+        url = (match[3] ? 'http://' : 'mailto:') + url;
+      }
+      i = match.index;
+      addText(raw.substr(0, i));
+      addLink(url, match[0].replace(MAILTO_REGEXP, ''));
+      raw = raw.substring(i + match[0].length);
+    }
+    addText(raw);
+    return $sanitize(html.join(''));
+
+    function addText(text) {
+      if (!text) {
+        return;
+      }
+      html.push(sanitizeText(text));
+    }
+
+    function addLink(url, text) {
+      html.push('<a ');
+      if (angular.isDefined(target)) {
+        html.push('target="',
+                  target,
+                  '" ');
+      }
+      html.push('href="',
+                url.replace(/"/g, '&quot;'),
+                '">');
+      addText(text);
+      html.push('</a>');
+    }
+  };
+}]);
+
+
+})(window, window.angular);
+
+},{}],6:[function(require,module,exports){
+require('./angular-sanitize');
+module.exports = 'ngSanitize';
+
+},{"./angular-sanitize":5}],7:[function(require,module,exports){
 require('./ui-bootstrap-tpls');
 module.exports = 'ui.bootstrap';
 
-},{"./ui-bootstrap-tpls":6}],6:[function(require,module,exports){
+},{"./ui-bootstrap-tpls":8}],8:[function(require,module,exports){
 /*
  * angular-ui-bootstrap
  * http://angular-ui.github.io/bootstrap/
@@ -6407,7 +7098,7 @@ angular.module("template/typeahead/typeahead-popup.html", []).run(["$templateCac
     "");
 }]);
 !angular.$$csp() && angular.element(document).find('head').prepend('<style type="text/css">.ng-animate.item:not(.left):not(.right){-webkit-transition:0s ease-in-out left;transition:0s ease-in-out left}</style>');
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /**
  * @license AngularJS v1.4.4
  * (c) 2010-2015 Google, Inc. http://angularjs.org
@@ -35012,11 +35703,11 @@ $provide.value("$locale", {
 })(window, document);
 
 !window.angular.$$csp().noInlineStyle && window.angular.element(document.head).prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>');
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 require('./angular');
 module.exports = angular;
 
-},{"./angular":7}],9:[function(require,module,exports){
+},{"./angular":9}],11:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -44228,11 +44919,11 @@ return jQuery;
 
 }));
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 
 module.exports = require('./lib/');
 
-},{"./lib/":11}],11:[function(require,module,exports){
+},{"./lib/":13}],13:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -44321,7 +45012,7 @@ exports.connect = lookup;
 exports.Manager = require('./manager');
 exports.Socket = require('./socket');
 
-},{"./manager":12,"./socket":14,"./url":15,"debug":19,"socket.io-parser":55}],12:[function(require,module,exports){
+},{"./manager":14,"./socket":16,"./url":17,"debug":21,"socket.io-parser":57}],14:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -44826,7 +45517,7 @@ Manager.prototype.onreconnect = function(){
   this.emitAll('reconnect', attempt);
 };
 
-},{"./on":13,"./socket":14,"./url":15,"backo2":16,"component-bind":17,"component-emitter":18,"debug":19,"engine.io-client":20,"indexof":51,"object-component":52,"socket.io-parser":55}],13:[function(require,module,exports){
+},{"./on":15,"./socket":16,"./url":17,"backo2":18,"component-bind":19,"component-emitter":20,"debug":21,"engine.io-client":22,"indexof":53,"object-component":54,"socket.io-parser":57}],15:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -44852,7 +45543,7 @@ function on(obj, ev, fn) {
   };
 }
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -45239,7 +45930,7 @@ Socket.prototype.disconnect = function(){
   return this;
 };
 
-},{"./on":13,"component-bind":17,"component-emitter":18,"debug":19,"has-binary":49,"socket.io-parser":55,"to-array":59}],15:[function(require,module,exports){
+},{"./on":15,"component-bind":19,"component-emitter":20,"debug":21,"has-binary":51,"socket.io-parser":57,"to-array":61}],17:[function(require,module,exports){
 (function (global){
 
 /**
@@ -45316,7 +46007,7 @@ function url(uri, loc){
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"debug":19,"parseuri":53}],16:[function(require,module,exports){
+},{"debug":21,"parseuri":55}],18:[function(require,module,exports){
 
 /**
  * Expose `Backoff`.
@@ -45403,7 +46094,7 @@ Backoff.prototype.setJitter = function(jitter){
 };
 
 
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
  * Slice reference.
  */
@@ -45428,7 +46119,7 @@ module.exports = function(obj, fn){
   }
 };
 
-},{}],18:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -45594,7 +46285,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],19:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 
 /**
  * Expose `debug()` as the module.
@@ -45733,11 +46424,11 @@ try {
   if (window.localStorage) debug.enable(localStorage.debug);
 } catch(e){}
 
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 
 module.exports =  require('./lib/');
 
-},{"./lib/":21}],21:[function(require,module,exports){
+},{"./lib/":23}],23:[function(require,module,exports){
 
 module.exports = require('./socket');
 
@@ -45749,7 +46440,7 @@ module.exports = require('./socket');
  */
 module.exports.parser = require('engine.io-parser');
 
-},{"./socket":22,"engine.io-parser":34}],22:[function(require,module,exports){
+},{"./socket":24,"engine.io-parser":36}],24:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -46458,7 +47149,7 @@ Socket.prototype.filterUpgrades = function (upgrades) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./transport":23,"./transports":24,"component-emitter":18,"debug":31,"engine.io-parser":34,"indexof":51,"parsejson":45,"parseqs":46,"parseuri":47}],23:[function(require,module,exports){
+},{"./transport":25,"./transports":26,"component-emitter":20,"debug":33,"engine.io-parser":36,"indexof":53,"parsejson":47,"parseqs":48,"parseuri":49}],25:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -46619,7 +47310,7 @@ Transport.prototype.onClose = function () {
   this.emit('close');
 };
 
-},{"component-emitter":18,"engine.io-parser":34}],24:[function(require,module,exports){
+},{"component-emitter":20,"engine.io-parser":36}],26:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies
@@ -46676,7 +47367,7 @@ function polling(opts){
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling-jsonp":25,"./polling-xhr":26,"./websocket":28,"xmlhttprequest":29}],25:[function(require,module,exports){
+},{"./polling-jsonp":27,"./polling-xhr":28,"./websocket":30,"xmlhttprequest":31}],27:[function(require,module,exports){
 (function (global){
 
 /**
@@ -46913,7 +47604,7 @@ JSONPPolling.prototype.doWrite = function (data, fn) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":27,"component-inherit":30}],26:[function(require,module,exports){
+},{"./polling":29,"component-inherit":32}],28:[function(require,module,exports){
 (function (global){
 /**
  * Module requirements.
@@ -47301,7 +47992,7 @@ function unloadHandler() {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":27,"component-emitter":18,"component-inherit":30,"debug":31,"xmlhttprequest":29}],27:[function(require,module,exports){
+},{"./polling":29,"component-emitter":20,"component-inherit":32,"debug":33,"xmlhttprequest":31}],29:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -47548,7 +48239,7 @@ Polling.prototype.uri = function(){
   return schema + '://' + this.hostname + port + this.path + query;
 };
 
-},{"../transport":23,"component-inherit":30,"debug":31,"engine.io-parser":34,"parseqs":46,"xmlhttprequest":29}],28:[function(require,module,exports){
+},{"../transport":25,"component-inherit":32,"debug":33,"engine.io-parser":36,"parseqs":48,"xmlhttprequest":31}],30:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -47788,7 +48479,7 @@ WS.prototype.check = function(){
   return !!WebSocket && !('__initialize' in WebSocket && this.name === WS.prototype.name);
 };
 
-},{"../transport":23,"component-inherit":30,"debug":31,"engine.io-parser":34,"parseqs":46,"ws":48}],29:[function(require,module,exports){
+},{"../transport":25,"component-inherit":32,"debug":33,"engine.io-parser":36,"parseqs":48,"ws":50}],31:[function(require,module,exports){
 // browser shim for xmlhttprequest module
 var hasCORS = require('has-cors');
 
@@ -47826,7 +48517,7 @@ module.exports = function(opts) {
   }
 }
 
-},{"has-cors":43}],30:[function(require,module,exports){
+},{"has-cors":45}],32:[function(require,module,exports){
 
 module.exports = function(a, b){
   var fn = function(){};
@@ -47834,7 +48525,7 @@ module.exports = function(a, b){
   a.prototype = new fn;
   a.prototype.constructor = a;
 };
-},{}],31:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 
 /**
  * This is the web browser implementation of `debug()`.
@@ -47983,7 +48674,7 @@ function load() {
 
 exports.enable(load());
 
-},{"./debug":32}],32:[function(require,module,exports){
+},{"./debug":34}],34:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -48182,7 +48873,7 @@ function coerce(val) {
   return val;
 }
 
-},{"ms":33}],33:[function(require,module,exports){
+},{"ms":35}],35:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -48295,7 +48986,7 @@ function plural(ms, n, name) {
   return Math.ceil(ms / n) + ' ' + name + 's';
 }
 
-},{}],34:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -48893,7 +49584,7 @@ exports.decodePayloadAsBinary = function (data, binaryType, callback) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./keys":35,"after":36,"arraybuffer.slice":37,"base64-arraybuffer":38,"blob":39,"has-binary":40,"utf8":42}],35:[function(require,module,exports){
+},{"./keys":37,"after":38,"arraybuffer.slice":39,"base64-arraybuffer":40,"blob":41,"has-binary":42,"utf8":44}],37:[function(require,module,exports){
 
 /**
  * Gets the keys for an object.
@@ -48914,7 +49605,7 @@ module.exports = Object.keys || function keys (obj){
   return arr;
 };
 
-},{}],36:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 module.exports = after
 
 function after(count, callback, err_cb) {
@@ -48944,7 +49635,7 @@ function after(count, callback, err_cb) {
 
 function noop() {}
 
-},{}],37:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 /**
  * An abstraction for slicing an arraybuffer even when
  * ArrayBuffer.prototype.slice is not supported
@@ -48975,7 +49666,7 @@ module.exports = function(arraybuffer, start, end) {
   return result.buffer;
 };
 
-},{}],38:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 /*
  * base64-arraybuffer
  * https://github.com/niklasvh/base64-arraybuffer
@@ -49036,7 +49727,7 @@ module.exports = function(arraybuffer, start, end) {
   };
 })("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
 
-},{}],39:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 (function (global){
 /**
  * Create a blob builder even when vendor prefixes exist
@@ -49089,7 +49780,7 @@ module.exports = (function() {
 })();
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],40:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 (function (global){
 
 /*
@@ -49151,12 +49842,12 @@ function hasBinary(data) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"isarray":41}],41:[function(require,module,exports){
+},{"isarray":43}],43:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],42:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/utf8js v2.0.0 by @mathias */
 ;(function(root) {
@@ -49399,7 +50090,7 @@ module.exports = Array.isArray || function (arr) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],43:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -49424,7 +50115,7 @@ try {
   module.exports = false;
 }
 
-},{"global":44}],44:[function(require,module,exports){
+},{"global":46}],46:[function(require,module,exports){
 
 /**
  * Returns `this`. Execute this without a "context" (i.e. without it being
@@ -49434,7 +50125,7 @@ try {
 
 module.exports = (function () { return this; })();
 
-},{}],45:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 (function (global){
 /**
  * JSON parse.
@@ -49469,7 +50160,7 @@ module.exports = function parsejson(data) {
   }
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],46:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 /**
  * Compiles a querystring
  * Returns string representation of the object
@@ -49508,7 +50199,7 @@ exports.decode = function(qs){
   return qry;
 };
 
-},{}],47:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 /**
  * Parses an URI
  *
@@ -49549,7 +50240,7 @@ module.exports = function parseuri(str) {
     return uri;
 };
 
-},{}],48:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -49594,7 +50285,7 @@ function ws(uri, protocols, opts) {
 
 if (WebSocket) ws.prototype = WebSocket.prototype;
 
-},{}],49:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 (function (global){
 
 /*
@@ -49656,9 +50347,9 @@ function hasBinary(data) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"isarray":50}],50:[function(require,module,exports){
-arguments[4][41][0].apply(exports,arguments)
-},{"dup":41}],51:[function(require,module,exports){
+},{"isarray":52}],52:[function(require,module,exports){
+arguments[4][43][0].apply(exports,arguments)
+},{"dup":43}],53:[function(require,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -49669,7 +50360,7 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],52:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 
 /**
  * HOP ref.
@@ -49754,7 +50445,7 @@ exports.length = function(obj){
 exports.isEmpty = function(obj){
   return 0 == exports.length(obj);
 };
-},{}],53:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 /**
  * Parses an URI
  *
@@ -49781,7 +50472,7 @@ module.exports = function parseuri(str) {
   return uri;
 };
 
-},{}],54:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 (function (global){
 /*global Blob,File*/
 
@@ -49926,7 +50617,7 @@ exports.removeBlobs = function(data, callback) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./is-buffer":56,"isarray":57}],55:[function(require,module,exports){
+},{"./is-buffer":58,"isarray":59}],57:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -50328,7 +51019,7 @@ function error(data){
   };
 }
 
-},{"./binary":54,"./is-buffer":56,"component-emitter":18,"debug":19,"isarray":57,"json3":58}],56:[function(require,module,exports){
+},{"./binary":56,"./is-buffer":58,"component-emitter":20,"debug":21,"isarray":59,"json3":60}],58:[function(require,module,exports){
 (function (global){
 
 module.exports = isBuf;
@@ -50345,9 +51036,9 @@ function isBuf(obj) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],57:[function(require,module,exports){
-arguments[4][41][0].apply(exports,arguments)
-},{"dup":41}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
+arguments[4][43][0].apply(exports,arguments)
+},{"dup":43}],60:[function(require,module,exports){
 /*! JSON v3.2.6 | http://bestiejs.github.io/json3 | Copyright 2012-2013, Kit Cambridge | http://kit.mit-license.org */
 ;(function (window) {
   // Convenience aliases.
@@ -51210,7 +51901,7 @@ arguments[4][41][0].apply(exports,arguments)
   }
 }(this));
 
-},{}],59:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 module.exports = toArray
 
 function toArray(list, index) {
@@ -51225,7 +51916,7 @@ function toArray(list, index) {
     return array
 }
 
-},{}],60:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -52775,13 +53466,14 @@ function toArray(list, index) {
   }
 }.call(this));
 
-},{}],61:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 window.appRoot = '.';
 window.Util = require('../shared/utilities.js');
 window._ = require('underscore');
 window.strf = require('../shared/strf.js');
 
 var angular = require('angular');
+var ngSanitize = require('angular-sanitize');
 var uiBootstrap = require('angular-ui-bootstrap');
 var _ = require('underscore');
 
@@ -52796,7 +53488,7 @@ var socket = null;
 
 
 
-var app = angular.module('app', [dragInventory.name, uiBootstrap]);
+var app = angular.module('app', [dragInventory.name, uiBootstrap, ngSanitize]);
 
 app.factory('socket', function($rootScope) {
 	var socket = require('socket.io-client')(url);
@@ -52884,10 +53576,14 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		player: null,
 		inventory: new UiInventory(null, 40, [], [], [], scope.itemMovedEvent),
 		loggedIn: false,
-        debugObjects: []
+        debugObjects: [],
+        tooltipTest: "<div><h3>Stabby Sharp</h3><br>+5 attack</div>"
 	});
 
 	angular.extend(scope, {
+		tooltipFunc: function(){
+			return "<b>Generic <i>italic</i></b>";
+		},
 		openLoginModal: function() {
 			var loginModal = $modal.open({
 				templateUrl: 'login.html',
@@ -53104,7 +53800,7 @@ app.directive('scrollToLast', ['$location', '$anchorScroll', function($location,
 
 }]);
 
-},{"../client/lib/SupportlikDnD/dragInventory.js":1,"../client/lib/SupportlikDnD/uiInventory.js":3,"../client/lib/SupportlikDnD/uiItem.js":4,"../shared/strf.js":62,"../shared/utilities.js":63,"angular":8,"angular-ui-bootstrap":5,"socket.io-client":10,"underscore":60}],62:[function(require,module,exports){
+},{"../client/lib/SupportlikDnD/dragInventory.js":1,"../client/lib/SupportlikDnD/uiInventory.js":3,"../client/lib/SupportlikDnD/uiItem.js":4,"../shared/strf.js":64,"../shared/utilities.js":65,"angular":10,"angular-sanitize":6,"angular-ui-bootstrap":7,"socket.io-client":12,"underscore":62}],64:[function(require,module,exports){
 module.exports = function(str, ctx) {
     var chars = str.split('');
     var output = '';
@@ -53164,7 +53860,7 @@ module.exports = function(str, ctx) {
     }
     return output;
 }
-},{}],63:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 if (!Object.prototype.toDebugString) {
 	Object.prototype.toDebugString = function() {
 		if(this.entityType && this.name) 
@@ -53309,4 +54005,4 @@ function generateRandomName() {
 	return name;
 }
 
-},{}]},{},[61]);
+},{}]},{},[63]);

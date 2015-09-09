@@ -4,6 +4,7 @@ window._ = require('underscore');
 window.strf = require('../shared/strf.js');
 
 var angular = require('angular');
+var ngSanitize = require('angular-sanitize');
 var uiBootstrap = require('angular-ui-bootstrap');
 var _ = require('underscore');
 
@@ -18,7 +19,7 @@ var socket = null;
 
 
 
-var app = angular.module('app', [dragInventory.name, uiBootstrap]);
+var app = angular.module('app', [dragInventory.name, uiBootstrap, ngSanitize]);
 
 app.factory('socket', function($rootScope) {
 	var socket = require('socket.io-client')(url);
@@ -106,10 +107,14 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		player: null,
 		inventory: new UiInventory(null, 40, [], [], [], scope.itemMovedEvent),
 		loggedIn: false,
-        debugObjects: []
+        debugObjects: [],
+        tooltipTest: "<div><h3>Stabby Sharp</h3><br>+5 attack</div>"
 	});
 
 	angular.extend(scope, {
+		tooltipFunc: function(){
+			return "<b>Generic <i>italic</i></b>";
+		},
 		openLoginModal: function() {
 			var loginModal = $modal.open({
 				templateUrl: 'login.html',

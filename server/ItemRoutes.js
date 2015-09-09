@@ -52,8 +52,9 @@ router.post('/craft', paperwork.accept({
 	}
 	
 	var item = new Item({
-		baseItem: baseItemType
+		baseItem: baseItemType,
 	});
+	console.log(item.tooltip);
 	item.move(player.inventory);
 	
 	res.send({

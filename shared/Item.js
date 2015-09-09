@@ -1,3 +1,5 @@
+var changeCase = require('change-case')
+
 var uidManager = require(appRoot + '/shared/UidManager.js');
 var BaseItem = require(appRoot + '/shared/BaseItem.js');
 
@@ -19,6 +21,8 @@ function Item(cfg) {
 		spriteY: 0,
 		
 		equipmentSlot: '',
+		
+		level: 1,
 		
 		affixes: {
 			primary: [],
@@ -63,9 +67,25 @@ function Item(cfg) {
 	}
 
 	_.extend(this, cfg);
+	
+	this.getTooltip();
+}
+
+Item.prototype.getTooltip = function() {
+	var self = this;
+	this.tooltip = strf("<h2>[name]</h2><br>[changeCase.titleCase(baseItem)]<br>Level [level] [itemType[itemType.length-1]]<br>", this);
+	
+	_.each(this.stats, function(value, stat) {
+		if(value) {
+			self.tooltip += value + " " + changeCase.titleCase(stat) + "<br>";
+		}
+	});
+	
+	return this.tooltip;
 }
 
 Item.prototype.applyBaseItem = function(type) {
+	console.log("applyBaseItem() " + type, BaseItem[type]);
 	if(BaseItem[type] === undefined) {
 		return false;
 	}

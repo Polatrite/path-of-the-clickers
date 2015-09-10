@@ -143,6 +143,12 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 			_.each(inventory.items, function(item) {
 				if(!item) return;
 				var uiItem = new UiItem(item.name, item);
+				uiItem.click = function() {
+					console.log("Click!", item);
+				}
+				uiItem.rightClick = function() {
+					console.log("Right-click!", item);
+				}
 				console.log("Wrapped UiItem", uiItem);
 				scope.inventory.addItem(uiItem, item.locationIndex, true);
 			});
@@ -316,6 +322,17 @@ app.directive('selectOnClick', function() {
 	};
 });
 
+app.directive('ngRightClick', function($parse) {
+    return function(scope, element, attrs) {
+        var fn = $parse(attrs.ngRightClick);
+        element.bind('contextmenu', function(event) {
+            scope.$apply(function() {
+                event.preventDefault();
+                fn(scope, {$event:event});
+            });
+        });
+    };
+});
 app.directive('scrollToLast', ['$location', '$anchorScroll', function($location, $anchorScroll) {
 	function linkFn(scope, element, attrs) {
 		$location.hash(attrs.scrollToLast);

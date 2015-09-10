@@ -54,6 +54,29 @@ h2 {
     background-color: #DDDDDD;
 }
 
+
+.inventory-cell-inner { 
+    -webkit-transition: box-shadow 0.1s linear;
+    -moz-transition: box-shadow 0.1s linear;
+    -ms-transition: box-shadow 0.1s linear;
+    -o-transition: box-shadow 0.1s linear;
+    transition: box-shadow 0.1s linear;
+}
+
+.inventory-cell-inner:hover {
+    box-shadow: inset 0px 0px 3px 3px #dda;
+}
+
+.yellow-aura {
+    box-shadow: inset 0px 0px 3px 3px #dda;
+}
+.green-aura {
+    box-shadow: inset 0px 0px 3px 3px #0EB02C;
+}
+.red-aura {
+    box-shadow: inset 0px 0px 3px 3px #C23636;
+}
+
 .inventory-tooltip {
     max-width: 420px;
 }

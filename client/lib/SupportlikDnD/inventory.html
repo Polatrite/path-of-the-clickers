@@ -12,6 +12,8 @@
                  class="inventory-cell-inner inventory-cell-item {{'item_index-' + getItemIndex(column, row)}}"
                  ng-style="items[getItemIndex(column, row)].get_item_background()"
                  ng-if="inventory.isItemInSlot(getItemIndex(column, row))"
+                 ng-click="items[getItemIndex(column, row)].click()"
+                 ng-right-click="items[getItemIndex(column, row)].rightClick()"
                  popover popover-trigger="click" popover-placement="right" popover-class="inventory-tooltip" popover-html="items[getItemIndex(column, row)].tooltip">
                 <!--(C{{column}} - R{{row}}-->
                 <!--IT{{items[getItemIndex(column, row)].name}})-->

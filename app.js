@@ -1,4 +1,4 @@
-require('long-stack-traces');
+//require('long-stack-traces');
 GLOBAL.appRoot = require('app-root-path');
 GLOBAL.Util = require(appRoot + '/shared/utilities.js');
 GLOBAL._ = require('underscore');
@@ -34,7 +34,9 @@ app.use(express.static(__dirname + '/client'));
 app.use('/player', require(appRoot + '/server/PlayerRoutes.js'));
 app.use('/item', require(appRoot + '/server/ItemRoutes.js'));
 
+if(!process.env.PORT) process.env.PORT = 8080;
 server.listen(process.env.PORT, process.env.IP);
+console.log("Theoretically listening on " + process.env.IP + ":" + process.env.PORT);
 ioServer.listen(server);
 
 var usernames = {};
@@ -107,3 +109,6 @@ ioServer.on('connection', function(socket) {
 console.log("We running this joint!");
 
 var test = require(appRoot + '/test.js');
+
+
+var derp = require(appRoot + '/affixGenerator.js');

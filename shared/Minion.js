@@ -29,8 +29,9 @@ var Minion = function(conf) {
 			threat: 0,
 	
 			attack: 1,
+			magic: 1,
 			attackSpeed: 1000,
-			cooldownReduction: 0,
+			cooldownAcceleration: 0,
 			critChance: 0,
 			critDamage: 0,
 			accuracy: 0,

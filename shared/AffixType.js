@@ -5,15 +5,8 @@ var AffixType = function(conf) {
 	this.name = "Debugging";
 	this.type = "primary";
 	this.statRanges = [];
-	/*  [{
-			stat: {
-				min: 3,
-				max: 8
-			}
-		}]*/
 	this.levelMin = 0;
 	this.levelMax = 100;
-	this.levelThresholds = { }
 
 	_.extend(this, conf);
 }
@@ -26,12 +19,18 @@ AffixType.prototype.createAffix = function() {
 	});
 
 	_.each(this.statRanges, function(statRange, stat) {
-		affix.stats[stat] = Math.randInt(statRange.min, statRange.max);
+		affix.stats[statRange.stat] = Math.randInt(statRange.min, statRange.max);
 	});
 	
 	console.log("Created a new affix instance: ", affix);
 
 	return affix;
+}
+
+AffixType.prototype.toDisplayString = function(type) {
+	if(type == "short") {
+		return strf("[name] ([levelMin]-[levelMax])", this);
+	}
 }
 
 module.exports = AffixType;

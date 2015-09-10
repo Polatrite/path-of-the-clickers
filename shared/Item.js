@@ -47,8 +47,9 @@ function Item(cfg) {
 			threat: 0,
 	
 			attack: 0,
+			magic: 0,
 			attackSpeed: 0,
-			cooldownReduction: 0,
+			cooldownAcceleration: 0,
 			critChance: 0,
 			critDamage: 0,
 			accuracy: 0,

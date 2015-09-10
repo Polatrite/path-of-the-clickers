@@ -1,6 +1,6 @@
-var Affix = require('./shared/Affix.js');
-var AffixType = require('./shared/AffixType.js');
-var StatRange = require('./shared/StatRange.js');
+var Affix = require(appRoot + '/shared/Affix.js');
+var AffixType = require(appRoot + '/shared/AffixType.js');
+var StatRange = require(appRoot + '/shared/StatRange.js');
 
 var AffixData = {
 	stats: {},
@@ -10,7 +10,7 @@ var AffixData = {
 	inOrBelowLevelRangeWeightedAffixes: [],
 
 	pickRandomAffix: function(level) {
-
+		return this.inOrBelowLevelRangeAffixes[level].pick();
 	}
 };
 AffixData.inLevelRangeAffixes[100] = undefined;
@@ -35,6 +35,7 @@ var AffixGenerator = function(conf) {
 			affix = new AffixType({
 				name: self.name,
 				type: self.type,
+				tier: i,
 				levelMin: self.levelGrowth(self, i-1),
 				levelMax: self.levelGrowth(self, i)-1
 			});
@@ -343,11 +344,37 @@ AffixData.stats.attackSpeed = new AffixGenerator({
 	]
 }).generate();
 
+AffixData.stats.magic = new AffixGenerator({
+	name: "Magic Damage & Cooldown Acceleration",
+	type: "primary",
+	numTiers: 12,
+	levelMin: 18,
+	levelMax: 100,
+	statGens: [
+		new StatGenerator({
+			stat: "magic",
+			numTiers: 12,
+			minLowest: attackMin*0.6,
+			maxLowest: attackMax*0.6,
+			statGrowth: highScalingStatGrowth
+		}),
+		new StatGenerator({
+			stat: "cooldownAcceleration",
+			numTiers: 12,
+			minLowest: 4,
+			minHighest: 23,
+			maxLowest: 6,
+			maxHighest: 29,
+			statGrowth: linearStatGrowth
+		})
+	]
+}).generate();
+
 AffixData.stats.cooldownAcceleration = new AffixGenerator({
 	name: "Cooldown Acceleration",
 	type: "primary",
 	numTiers: 8,
-	levelMin: 1,
+	levelMin: 10,
 	levelMax: 100,
 	statGens: [
 		new StatGenerator({
@@ -541,7 +568,7 @@ var now = new Date();
 console.log(AffixData.inOrBelowLevelRangeAffixes[60]);
 var chosen = {};
 for(var i = 0; i <= 21000000; i++) {
-	var affixType = AffixData.inOrBelowLevelRangeAffixes[40].pick();
+	var affixType = AffixData.pickRandomAffix(60);
 	if(!chosen[affixType.name])
 		chosen[affixType.name] = 0;
 	chosen[affixType.name] += 1;

@@ -4,6 +4,7 @@ var AffixType = function(conf) {
 	this.entityType = 'AffixType';
 	this.name = "Debugging";
 	this.type = "primary";
+	this.tier = -1;
 	this.statRanges = [];
 	this.levelMin = 0;
 	this.levelMax = 100;
@@ -14,11 +15,12 @@ var AffixType = function(conf) {
 AffixType.prototype.createAffix = function() {
 	var self = this;
 	var affix = new Affix({
-		name: this.name,
-		type: this.type
+		name: self.name,
+		type: self.type,
+		tier: self.tier
 	});
 
-	_.each(this.statRanges, function(statRange, stat) {
+	_.each(self.statRanges, function(statRange, stat) {
 		affix.stats[statRange.stat] = Math.randInt(statRange.min, statRange.max);
 	});
 	

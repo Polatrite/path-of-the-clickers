@@ -2,8 +2,55 @@ var changeCase = require('change-case')
 
 var uidManager = require(appRoot + '/shared/UidManager.js');
 var BaseItem = require(appRoot + '/shared/BaseItem.js');
+var AffixData = require(appRoot + '/game-data/AffixData.js');
 
-var ItemQualities = ['normal', 'uncommon', 'magic', 'rare'];
+var ItemQualities = {
+	'shoddy': {
+		name: 'shoddy',
+		level: 1,
+		primaryAffixes: 1
+	},
+	'ordinary': {
+		name: 'ordinary',
+		level: 2,
+		primaryAffixes: 2
+	},
+	'uncommon': {
+		name: 'uncommon',
+		level: 3,
+		primaryAffixes: 3
+	},
+	'rare': {
+		name: 'rare',
+		level: 4,
+		primaryAffixes: 4
+	},
+	'enchanted': {
+		name: 'enchanted',
+		level: 5,
+		primaryAffixes: 5
+	},
+	'masterwork': {
+		name: 'masterwork',
+		level: 6,
+		primaryAffixes: 6
+	},
+	'ultimate': {
+		name: 'ultimate',
+		level: 7,
+		primaryAffixes: 7
+	},
+	'mythic': {
+		name: 'mythic',
+		level: 8,
+		primaryAffixes: 8
+	},
+	'godly': {
+		name: 'godly',
+		level: 9,
+		primaryAffixes: 9
+	}
+};
 
 function Item(cfg) {
 	_.extend(this, {
@@ -25,7 +72,8 @@ function Item(cfg) {
 		equipmentSlot: '',
 		
 		level: 1,
-		quality: 'normal',
+		quality: 'shoddy',
+		_quality: ItemQualities['shoddy'],
 		
 		affixes: {
 			primary: [],
@@ -72,6 +120,7 @@ function Item(cfg) {
 
 	_.extend(this, cfg);
 	
+	this.applyQuality(this.quality, true);
 	this.getTooltip();
 }
 
@@ -84,8 +133,29 @@ Item.prototype.getTooltip = function() {
 			self.tooltip += value + " " + changeCase.titleCase(stat) + "<br>";
 		}
 	});
+
+	_.each(this.affixes.primary, function(affix) {
+		self.tooltip += affix.toDisplayString("long html");
+	});
 	
 	return this.tooltip;
+}
+
+Item.prototype.applyQuality = function(quality, adjustAffixes) {
+	var self = this;
+	self.quality = quality;
+	self._quality = ItemQualities[quality];
+
+	if(adjustAffixes) {
+		if(self.affixes.primary.length < self._quality.primaryAffixes) {
+			for(var i = self.affixes.primary.length; i < self._quality.primaryAffixes; i++) {
+				var affix = AffixData.pickRandomAffix(self.level).createAffix();
+				affix.apply(this);
+			}
+		}
+	}
+
+	return true;
 }
 
 Item.prototype.applyBaseItem = function(type) {

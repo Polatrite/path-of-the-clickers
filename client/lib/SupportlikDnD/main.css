@@ -58,7 +58,7 @@ html {
     align-items: center; /* align items in Cross Axis */
     align-content: center; /* Extra space in Cross Axis */
 
-    background-image: url('http://i.imgur.com/nOqKSbE.png');
+    background-image: url('../../img/ui.png');
     background-position: -229px -331px;
     background-repeat: no-repeat;
 }

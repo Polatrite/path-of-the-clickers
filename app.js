@@ -111,4 +111,5 @@ console.log("We running this joint!");
 var test = require(appRoot + '/test.js');
 
 
-var derp = require(appRoot + '/affixGenerator.js');
+var derp = require(appRoot + '/game-data/AffixData.js');
+console.log(derp.stats.attack.length);

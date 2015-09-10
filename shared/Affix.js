@@ -1,3 +1,5 @@
+var changeCase = require('change-case')
+
 var uidManager = require(appRoot + '/shared/UidManager.js');
 
 var Affix = function(conf) {
@@ -7,6 +9,7 @@ var Affix = function(conf) {
 		
 		name: "Debugging",
 		type: "primary",
+		tier: -1,
 		stats: {},
 		location: null
 	})
@@ -56,6 +59,30 @@ Affix.prototype.unapply = function() {
 	console.log("Unapplied " + this.toDebugString() + " from " + item.toDebugString());
 
 	return true;
+}
+
+Affix.prototype.toDisplayString = function(type) {
+	var msg = "";
+	var newline = "\n";
+
+	if(type.toLowerCase().indexOf("html") > -1) {
+		newline = "<br>";
+	}
+
+	msg = "[T" + this.tier + "] " + this.name;
+
+	if(type.toLowerCase().indexOf("long") > -1) {
+		msg += newline;
+		_.each(this.stats, function(value, stat) {
+			if(value) {
+				msg += value + " " + changeCase.titleCase(stat) + newline;
+			}
+		});
+		msg += newline;
+	}
+
+
+	return msg;
 }
 
 module.exports = Affix;

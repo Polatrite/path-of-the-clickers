@@ -1,7 +1,8 @@
 var changeCase = require('change-case')
 
 var uidManager = require(appRoot + '/shared/UidManager.js');
-var BaseItem = require(appRoot + '/shared/BaseItem.js');
+var BaseItems = require(appRoot + '/game-data/BaseItems.js');
+var CurrencyItems = require(appRoot + '/game-data/CurrencyItems.js');
 var AffixData = require(appRoot + '/game-data/AffixData.js');
 
 var ItemQualities = {
@@ -57,7 +58,7 @@ function Item(cfg) {
 		uid: uidManager.next(this),
 		entityType: 'Item',
 		
-		baseItem: 0,
+		baseItem: null,
 		
 		name: '',
 		description: '',
@@ -107,6 +108,10 @@ function Item(cfg) {
 			recovery: 0,
 			perseverance: 0
 		},
+
+		usable: false,
+		useTargets: [],
+		useAction: null,
 		
 		location: null,
 		locationIndex: -1,
@@ -135,7 +140,7 @@ Item.prototype.getTooltip = function() {
 	});
 
 	_.each(this.affixes.primary, function(affix) {
-		self.tooltip += affix.toDisplayString("long html");
+		self.tooltip += affix.toDisplayString("html");
 	});
 	
 	return this.tooltip;
@@ -146,10 +151,23 @@ Item.prototype.applyQuality = function(quality, adjustAffixes) {
 	self.quality = quality;
 	self._quality = ItemQualities[quality];
 
-	if(adjustAffixes) {
+	if(adjustAffixes && self.itemType.includes('equipment')) {
 		if(self.affixes.primary.length < self._quality.primaryAffixes) {
 			for(var i = self.affixes.primary.length; i < self._quality.primaryAffixes; i++) {
-				var affix = AffixData.pickRandomAffix(self.level).createAffix();
+				var loops = 0;
+				var affixType = null;
+				while(!affixType) {
+					loops++;
+					if(loops >= MAX_RENEGADE_LOOPS) {
+						console.error("INFINITE LOOP DETECTED", new Error());
+						break;
+					}
+					affixType = AffixData.pickRandomAffix(self.level);
+					if(self.hasAffix(affixType.name)) {
+						affixType = null;
+					}
+				}
+				var affix = affixType.createAffix();
 				affix.apply(this);
 			}
 		}
@@ -158,13 +176,22 @@ Item.prototype.applyQuality = function(quality, adjustAffixes) {
 	return true;
 }
 
+Item.prototype.hasAffix = function(affixName) {
+	for(var i = 0; i < this.affixes.primary.length; i++) {
+		if(this.affixes.primary[i].name === affixName) {
+			return true;
+		}
+	}
+	return false;
+}
+
 Item.prototype.applyBaseItem = function(type) {
-	console.log("applyBaseItem() " + type, BaseItem[type]);
-	if(BaseItem[type] === undefined) {
+	console.log("applyBaseItem() " + type, BaseItems[type]);
+	if(BaseItems[type] === undefined) {
 		return false;
 	}
 		
-	_.extend(this, BaseItem[type]);
+	_.extend(this, BaseItems[type]);
 }
 
 Item.prototype.equipOn = function(minion) {
@@ -229,11 +256,14 @@ Item.prototype.move = function(newLocation, newIndex) {
 
 Item.prototype.addStats = function(stats) {
 	var item = this;
+	console.log("Stats", stats);
 	_.each(stats, function(value, stat) {
 		if(value == 0) { return; }
 		if(stat in item.stats) {
 			console.log(item.toDebugString() + " " + stat + " increased from " + item.stats[stat] + " to " + (item.stats[stat] + value));
 			item.stats[stat] += value;
+		} else {
+			item.stats[stat] = value;
 		}
 	});
 	
@@ -241,6 +271,8 @@ Item.prototype.addStats = function(stats) {
 	if(minion) {
 		minion.addStats(stats, minion.permanentStats);
 	}
+
+	this.getTooltip();
 
 	return true;
 }
@@ -252,6 +284,9 @@ Item.prototype.removeStats = function(stats) {
 		if(stat in item.stats) {
 			console.log(item.toDebugString() + " " + stat + " decreased from " + item.stats[stat] + " to " + (item.stats[stat] - value));
 			item.stats[stat] -= value;
+		} else {
+			console.error(item.toDebugString() + " tried to decrease " + stat + " but doesn't have it!");
+			return false
 		}
 	});
 
@@ -260,7 +295,36 @@ Item.prototype.removeStats = function(stats) {
 		minion.removeStats(stats, minion.permanentStats);
 	}
 
+	this.getTooltip();
+
 	return true;
+}
+
+Item.prototype.use = function(target) {
+	var item = this;
+	if(!item.usable) {
+		console.error("Item is not usable");
+		return false;
+	}
+	if(item.location !== target.location) {
+		console.error("Item and target are not in the same location");
+		return false;
+	}
+
+	if(target.entityType === 'Item') {
+		var valid = false;
+		_.each(target.itemType, function(itemType) {
+			if(item.useTargets.includes(itemType)) {
+				valid = true;
+			}
+		});
+		if(!valid) {
+			console.error("Item is not usable on target");
+			return false;
+		}
+
+		item.useAction(target);
+	}
 }
 
 module.exports = Item;

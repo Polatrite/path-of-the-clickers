@@ -4,7 +4,7 @@ var BaseItems = {
 	'GlassShard': {
 		name: 'Glass Shard',
 
-		itemType: ['item', 'weapon', 'dagger'],
+		itemType: ['item', 'equipment', 'weapon', 'dagger'],
 		
 		spritesheet: spritesheet,
 		spriteX: 1,
@@ -19,7 +19,7 @@ var BaseItems = {
 	'WoodenSword': {
 		name: 'Wooden Sword',
 
-		itemType: ['item', 'weapon', 'sword'],
+		itemType: ['item', 'equipment', 'weapon', 'sword'],
 		
 		spritesheet: spritesheet,
 		spriteX: 0,
@@ -34,7 +34,7 @@ var BaseItems = {
 	'BasicHatchet': {
 		name: 'Basic Hatchet',
 
-		itemType: ['item', 'weapon', 'axe'],
+		itemType: ['item', 'equipment', 'weapon', 'axe'],
 		
 		spritesheet: spritesheet,
 		spriteX: 0,
@@ -49,7 +49,7 @@ var BaseItems = {
 	'CrudeBow': {
 		name: 'Crude Bow',
 
-		itemType: ['item', 'weapon', 'bow'],
+		itemType: ['item', 'equipment', 'weapon', 'bow'],
 		
 		spritesheet: spritesheet,
 		spriteX: 0,

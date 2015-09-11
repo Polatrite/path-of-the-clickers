@@ -78,8 +78,9 @@ Affix.prototype.toDisplayString = function(type) {
 				msg += value + " " + changeCase.titleCase(stat) + newline;
 			}
 		});
-		msg += newline;
 	}
+
+	msg += newline;
 
 
 	return msg;

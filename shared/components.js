@@ -221,7 +221,7 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		},
 		
 		craft: function() {
-			var baseItemTypes = ['GlassShard', 'WoodenSword', 'BasicHatchet', 'CrudeBow'];
+			var baseItemTypes = ['GlassShard', 'WoodenSword', 'BasicHatchet', 'CrudeBow', 'ScrollAlteration', 'ScrollAlteration'];
 			var baseItemType = baseItemTypes.pick();
 			$http.post('/item/craft', {
 				playerUid: scope.player.uid,

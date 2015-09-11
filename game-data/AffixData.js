@@ -565,9 +565,8 @@ function buildAllAffixes() {
 buildAllAffixes();
 
 var now = new Date();
-console.log(AffixData.inOrBelowLevelRangeAffixes[60]);
 var chosen = {};
-for(var i = 0; i <= 21000000; i++) {
+for(var i = 0; i <= 2100000; i++) {
 	var affixType = AffixData.pickRandomAffix(60);
 	if(!chosen[affixType.name])
 		chosen[affixType.name] = 0;
@@ -575,6 +574,5 @@ for(var i = 0; i <= 21000000; i++) {
 }
 
 console.log(chosen);
-//console.log(AffixData);
 
 module.exports = AffixData;

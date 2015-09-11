@@ -4,6 +4,8 @@ GLOBAL.Util = require(appRoot + '/shared/utilities.js');
 GLOBAL._ = require('underscore');
 GLOBAL.strf = require(appRoot + '/shared/strf.js');
 
+GLOBAL.MAX_RENEGADE_LOOPS = 120;
+
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
@@ -26,7 +28,7 @@ serverStorage.initSync({
 });
 
 GLOBAL.$E = require(appRoot + '/shared/uid.js');
-console.log(serverStorage.values());
+//console.log(serverStorage.values());
 
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/client'));

@@ -55,7 +55,6 @@ Inventory.prototype.getEmptySlot = function () {
     for (var i = 0; i < this.items.length; i++) {
         if (this.items[i] == undefined) {
         	return i;
-        	console.log("getEmptySlot() returns " + i);
         }
     }
 

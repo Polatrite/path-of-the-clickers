@@ -23,7 +23,7 @@ module.exports = {
 			return false;
 		}
 		UidManager.entities[entity.uid] = entity;
-		console.log("UidManager.add(): Added " + entity.entityType + " #" + entity.uid);
+		//console.log("UidManager.add(): Added " + entity.entityType + " #" + entity.uid);
 	},
 	
 	get: function(uid) {
@@ -31,14 +31,14 @@ module.exports = {
 			UidManager.entities[uid] = serverStorage.getItem(uid);
 			console.log("UidManager.get(): #" + uid + " loaded from database.");
 		}
-		console.log("UidManager.get(): Returning ", uid);
+		//console.log("UidManager.get(): Returning ", uid);
 		return UidManager.entities[uid];
 	},
 	
 	getByFunc: function(findFunc) {
 		var entity = _.find(serverStorage.values(), findFunc);
-		if(entity)
-			console.log("UidManager.get(): Returning ", entity.uid);
+		//if(entity)
+		//	console.log("UidManager.get(): Returning ", entity.uid);
 		return entity;
 	},
 	

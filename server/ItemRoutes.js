@@ -3,7 +3,8 @@ var paperwork = require('paperwork');
 
 var uidManager = require(appRoot + '/shared/UidManager.js');
 var Item = require(appRoot + '/shared/Item.js');
-var BaseItem = require(appRoot + '/shared/BaseItem.js');
+var BaseItems = require(appRoot + '/game-data/BaseItems.js');
+var CurrencyItems = require(appRoot + '/game-data/CurrencyItems.js');
 
 var router = express.Router();
 
@@ -35,6 +36,34 @@ router.post('/move', paperwork.accept({
 	res.send(200);
 });
 
+router.post('/use', paperwork.accept({
+	itemUid: Number,
+	targetUid: Number,
+	//paperwork.modifiers: [String]
+}), function(req, res) {
+	var item = uidManager.get(req.body.itemUid);
+	var target = uidManager.get(req.body.targetUid);
+
+	if(!item) {
+		res.send("Item could not be found", 500);
+		return;
+	}
+	if(!item.usable) {
+		res.send("Item is not usable", 500);
+		return false;
+	}
+	if(!target) {
+		res.send("Target could not be found", 500);
+		return;
+	}
+	if(item.location !== target.location) {
+		res.send("Item and target are not in the same inventory", 500);
+		return;
+	}
+
+	item.use(target);
+});
+
 router.post('/craft', paperwork.accept({
 	playerUid: Number,
 	baseItem: String,
@@ -45,15 +74,17 @@ router.post('/craft', paperwork.accept({
 	
 	if(!player) {
 		res.send("Player could not be found", 500);
+		return;
 	}
-	if(BaseItem[baseItemType] === undefined) {
+	if(BaseItems[baseItemType] === undefined) {
 		res.send("Invalid base item type", 500);
 		return;
 	}
 	
 	var item = new Item({
 		baseItem: baseItemType,
-		quality: ['normal', 'uncommon', 'magic', 'rare'].pick()
+		level: Math.randInt(15, 40),
+		quality: ['ordinary', 'rare', 'masterwork'].pick()
 	});
 	console.log(item.tooltip);
 	item.move(player.inventory);
@@ -65,8 +96,9 @@ router.post('/craft', paperwork.accept({
 });
 
 router.post('/equip', paperwork.accept({
-	itemUid: String,
-	minionUid: String
+	playerUid: Number,
+	itemUid: Number,
+	minionUid: Number
 }), function(req, res) {
 	var minion = uidManager.get(req.body.minionUid);
 	var item = uidManager.get(req.body.itemUid);

@@ -78,6 +78,7 @@ h2 {
 }
 
 .inventory-tooltip {
+    min-width: 320px;
     max-width: 420px;
 }
 

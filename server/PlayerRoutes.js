@@ -8,7 +8,16 @@ var Item = require(appRoot + '/shared/Item.js');
 var router = express.Router();
 
 router.post('/create', function(req, res) {
+	console.log(req.session);
+	if(req.session.playerUid) {
+		console.log("Found session already: ", req.session.playerUid);
+		resyncPlayer(res, req.session.playerUid);
+		return;
+	}
+
 	var player = PlayerManager.create();
+	req.session.playerUid = player.uid;
+	console.log("SESSION: ", req.session);
 	res.send(player.clean());
 });
 
@@ -56,14 +65,16 @@ router.post('/login', paperwork.accept({
 		return res.send('Incorrect password', 401);
 	}
 	
+	req.session.playerUid = player.uid;
+	console.log("SESSION: ", req.session);
+
 	res.send(player.clean());
 });
 
 router.post('/resync', paperwork.accept({
 	playerUid: Number
 }), function(req, res) {
-	var player = UidManager.get(req.body.playerUid);
-	res.send(player.clean());
+	resyncPlayer(res, req.session.playerUid);
 });
 
 router.get('/:username', function(req, res) {
@@ -85,6 +96,12 @@ router.post('/:uid/changePassword', paperwork.accept({
 }), function(req, res) {
 	
 });
+
+function resyncPlayer(res, playerUid) {
+	console.log("Resync triggered on " + playerUid);
+	var player = UidManager.get(playerUid);
+	res.send(player.clean());
+}
 
 console.log('Initialized routes');
 

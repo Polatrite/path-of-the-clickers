@@ -132,6 +132,10 @@ function Item(cfg) {
 Item.prototype.getTooltip = function() {
 	var self = this;
 	this.tooltip = strf("<h2 class='item-quality-[quality]'>[name]</h2>Level [level] [quality] [itemType[itemType.length-1]]<br>", this);
+
+	if(this.description) {
+		this.tooltip += this.description + "<br>";
+	}
 	
 	_.each(this.stats, function(value, stat) {
 		if(value) {

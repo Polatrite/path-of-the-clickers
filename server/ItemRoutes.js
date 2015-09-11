@@ -80,7 +80,7 @@ router.post('/craft', paperwork.accept({
 		res.send("Invalid base item type", 500);
 		return;
 	}
-	
+
 	var item = new Item({
 		baseItem: baseItemType,
 		level: Math.randInt(15, 40),
@@ -93,6 +93,7 @@ router.post('/craft', paperwork.accept({
 		inventory: player.inventory,
 		item: item
 	});
+	console.log("SESSION: ", req.session);
 });
 
 router.post('/equip', paperwork.accept({

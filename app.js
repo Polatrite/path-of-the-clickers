@@ -8,9 +8,12 @@ GLOBAL.MAX_RENEGADE_LOOPS = 120;
 
 var express = require('express');
 var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
+var session = require('express-session');
 var app = express();
 var http = require('http');
 
+var crypto = require('crypto');
 var server = http.createServer(app);
 var socketIoServer = require('socket.io');
 var ioServer = socketIoServer(server);
@@ -30,7 +33,12 @@ serverStorage.initSync({
 GLOBAL.$E = require(appRoot + '/shared/uid.js');
 //console.log(serverStorage.values());
 
+app.use(cookieParser());
+app.use(session({
+	secret: 'toto-gonna-wreck-the-market-so-hard'
+}));
 app.use(bodyParser.json());
+
 app.use(express.static(__dirname + '/client'));
 
 app.use('/player', require(appRoot + '/server/PlayerRoutes.js'));

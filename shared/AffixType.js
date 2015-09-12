@@ -24,7 +24,6 @@ AffixType.prototype.createAffix = function() {
 		affix.stats[statRange.stat] = Math.randInt(statRange.min, statRange.max);
 	});
 	
-	console.log("Affix created", affix);
 	return affix;
 }
 

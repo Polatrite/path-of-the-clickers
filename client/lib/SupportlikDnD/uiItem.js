@@ -22,6 +22,9 @@ module.exports = function UiItem(name, serverItem) {
      * @type {String}
      */
     this.name = serverItem.name;
+    
+    this.leftClick = function() {};
+    this.rightClick = function() {};
     /**
      * Tags of the item.
      * @type {String[]}
@@ -50,6 +53,13 @@ module.exports = function UiItem(name, serverItem) {
      * @type {String}
      */
     this.spritesheet = serverItem.spritesheet;
+
+    this.updateItem = function(item) {
+        that.serverItem = item;
+        that.name = item.name;
+        that.tooltip = item.tooltip;
+        that.tags = item.tags;
+    };
 
     /**
      * Adds a tag to the item.

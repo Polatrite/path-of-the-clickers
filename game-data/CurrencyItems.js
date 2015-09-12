@@ -27,7 +27,16 @@ var CurrencyItems = {
 		usable: true,
 		useTargets: ['equipment'],
 		useAction: function(target) {
+			var validQualities = ['ordinary', 'uncommon', 'rare'];
 			console.log("Used " + this.name + " on " + target.name);
+			if(!validQualities.includes(target.quality)) {
+				return false;
+			}
+
+			target.clearAffixes();
+			target.createMissingAffixes();
+
+			return true;
 		},
 		
 		spriteX: 0,

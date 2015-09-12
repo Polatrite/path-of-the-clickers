@@ -726,6 +726,9 @@ module.exports = function UiItem(name, serverItem) {
      * @type {String}
      */
     this.name = serverItem.name;
+    
+    this.leftClick = function() {};
+    this.rightClick = function() {};
     /**
      * Tags of the item.
      * @type {String[]}
@@ -754,6 +757,13 @@ module.exports = function UiItem(name, serverItem) {
      * @type {String}
      */
     this.spritesheet = serverItem.spritesheet;
+
+    this.updateItem = function(item) {
+        that.serverItem = item;
+        that.name = item.name;
+        that.tooltip = item.tooltip;
+        that.tags = item.tags;
+    };
 
     /**
      * Adds a tag to the item.
@@ -53896,14 +53906,10 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		player: null,
 		inventory: new UiInventory(null, 40, [], [], [], scope.itemMovedEvent),
 		loggedIn: false,
-        debugObjects: [],
-        tooltipTest: "<div><h3>Stabby Sharp</h3><br>+5 attack</div>"
+		debugObjects: []
 	});
 
 	angular.extend(scope, {
-		tooltipFunc: function(){
-			return "<b>Generic <i>italic</i></b>";
-		},
 		openLoginModal: function() {
 			var loginModal = $modal.open({
 				templateUrl: 'login.html',
@@ -53932,10 +53938,27 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 			_.each(inventory.items, function(item) {
 				if(!item) return;
 				var uiItem = new UiItem(item.name, item);
-				uiItem.click = function() {
+				uiItem.click = function(event) {
 					console.log("Click!", item);
+					if(scope.rightClickItem) {
+						var originUid = scope.rightClickItem.serverItem.uid;
+						scope.rightClickItem = null;
+						console.log("Right-click is on the cursor, let's apply it!");
+						$http.post('/item/use', {
+							itemUid: originUid,
+							targetUid: item.uid
+						}).then(function(res) {
+							//uiItem.updateItem(res.data.item);
+							if(res.data.inventory) {
+								scope.loadInventory(res.data.inventory);
+							}
+						}, function(err) {
+							console.log("/item/use error", err);
+						});
+					}
 				}
 				uiItem.rightClick = function() {
+					scope.rightClickItem = uiItem;
 					console.log("Right-click!", item);
 				}
 				console.log("Wrapped UiItem", uiItem);

@@ -15,12 +15,14 @@ var minion = new Minion({
 var stats = minion.resetCombatStats();
 
 var item = new Item({
+	baseItem: 'WoodenSword',
 	name: 'Rending Shortsword',
+	level: 40
 });
 
-item.stats.attack = 11;
+//item.stats.attack = 11;
 
-var affixType = new AffixType({
+/*var affixType = new AffixType({
 	name: 'Attack Damage',
 	type: 'primary',
 	statRanges: {
@@ -39,7 +41,7 @@ affix.apply(item);
 item.equipOn(minion);
 affix.unapply();
 affix.apply(item);
-item.unequip();
+item.unequip();*/
 
 item.move(player.inventory, 4);
 item.move(player.inventory);
@@ -48,6 +50,19 @@ item.move(player.inventory, 10);
 var item2 = new Item();
 item2.move(player.inventory, 6);
 item2.move(player.inventory, 12);
+
+console.log(item);
+item.applyQuality('uncommon', true);
+console.log(item.tooltip);
+item.clearAffixes();
+item.createMissingAffixes();
+item.clearAffixes();
+item.createMissingAffixes();
+item.clearAffixes();
+item.createMissingAffixes();
+item.clearAffixes();
+console.log(item.tooltip);
+console.log(item.stats);
 
 //console.log(player.inventory.items);
 

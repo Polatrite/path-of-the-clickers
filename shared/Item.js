@@ -112,6 +112,7 @@ function Item(cfg) {
 		usable: false,
 		useTargets: [],
 		useAction: null,
+		consumeOnUse: false,
 		
 		location: null,
 		locationIndex: -1,
@@ -156,28 +157,35 @@ Item.prototype.applyQuality = function(quality, adjustAffixes) {
 	self._quality = ItemQualities[quality];
 
 	if(adjustAffixes && self.itemType.includes('equipment')) {
-		if(self.affixes.primary.length < self._quality.primaryAffixes) {
-			for(var i = self.affixes.primary.length; i < self._quality.primaryAffixes; i++) {
-				var loops = 0;
-				var affixType = null;
-				while(!affixType) {
-					loops++;
-					if(loops >= MAX_RENEGADE_LOOPS) {
-						console.error("INFINITE LOOP DETECTED", new Error());
-						break;
-					}
-					affixType = AffixData.pickRandomAffix(self.level);
-					if(self.hasAffix(affixType.name)) {
-						affixType = null;
-					}
-				}
-				var affix = affixType.createAffix();
-				affix.apply(this);
-			}
-		}
+		self.createMissingAffixes();
 	}
 
 	return true;
+}
+
+Item.prototype.createMissingAffixes = function() {
+	var self = this;
+	if(self.affixes.primary.length < self._quality.primaryAffixes) {
+		for(var i = self.affixes.primary.length; i < self._quality.primaryAffixes; i++) {
+			var loops = 0;
+			var affixType = null;
+			while(!affixType) {
+				loops++;
+				if(loops >= MAX_RENEGADE_LOOPS) {
+					console.error("INFINITE LOOP DETECTED", new Error());
+					break;
+				}
+				affixType = AffixData.pickRandomAffix(self.level);
+				if(self.hasAffix(affixType.name)) {
+					affixType = null;
+				}
+			}
+			var affix = affixType.createAffix();
+			affix.apply(this);
+		}
+	}
+
+	self.getTooltip();
 }
 
 Item.prototype.hasAffix = function(affixName) {
@@ -187,6 +195,19 @@ Item.prototype.hasAffix = function(affixName) {
 		}
 	}
 	return false;
+}
+
+Item.prototype.clearAffixes = function() {
+	var affixes = [];
+	_.each(this.affixes.primary, function(affix) {
+		affixes.push(affix);
+	});
+
+	_.each(affixes, function(affix) {
+		affix.unapply();
+	});
+
+	this.affixes.primary = [];
 }
 
 Item.prototype.applyBaseItem = function(type) {
@@ -243,6 +264,9 @@ Item.prototype.move = function(newLocation, newIndex) {
 		$E(this.location).removeItem(this);
 	}
 
+	if(newLocation === null) {
+		this.location = null;
+	}
 	if(newLocation.entityType === 'Player') {
 		var player = newLocation;
 		console.log(strf("Added [name] [entityType]", this));
@@ -260,7 +284,6 @@ Item.prototype.move = function(newLocation, newIndex) {
 
 Item.prototype.addStats = function(stats) {
 	var item = this;
-	console.log("Stats", stats);
 	_.each(stats, function(value, stat) {
 		if(value == 0) { return; }
 		if(stat in item.stats) {
@@ -271,7 +294,7 @@ Item.prototype.addStats = function(stats) {
 		}
 	});
 	
-	var minion = $E(this.location);
+	var minion = $E(this.location, 'Minion');
 	if(minion) {
 		minion.addStats(stats, minion.permanentStats);
 	}
@@ -283,6 +306,8 @@ Item.prototype.addStats = function(stats) {
 
 Item.prototype.removeStats = function(stats) {
 	var item = this;
+	console.log("REMOVESTATS", stats);
+	console.log(item);
 	_.each(stats, function(value, stat) {
 		if(value == 0) { return; }
 		if(stat in item.stats) {
@@ -294,7 +319,7 @@ Item.prototype.removeStats = function(stats) {
 		}
 	});
 
-	var minion = $E(this.location);
+	var minion = $E(this.location, 'Minion');
 	if(minion) {
 		minion.removeStats(stats, minion.permanentStats);
 	}
@@ -327,7 +352,12 @@ Item.prototype.use = function(target) {
 			return false;
 		}
 
-		item.useAction(target);
+
+		var ret = item.useAction(target);
+		if(item.consumeOnUse) {
+			item.move(null);
+		}
+		return ret;
 	}
 }
 

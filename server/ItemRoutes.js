@@ -20,9 +20,7 @@ router.post('/move', paperwork.accept({
 	var item = uidManager.get(req.body.itemUid);
 	var oldLocation = uidManager.get(req.body.fromUid);
 	var newLocation = uidManager.get(req.body.toUid);
-	
-	console.log(req.body, newLocation);
-	
+		
 	if(item.location != oldLocation.uid ) {
 		res.send("Item's old location is incorrect", 660); //resync
 		return;
@@ -42,6 +40,7 @@ router.post('/use', paperwork.accept({
 	//paperwork.modifiers: [String]
 }), function(req, res) {
 	var item = uidManager.get(req.body.itemUid);
+	var inventory = uidManager.get(item.location);
 	var target = uidManager.get(req.body.targetUid);
 
 	if(!item) {
@@ -61,7 +60,16 @@ router.post('/use', paperwork.accept({
 		return;
 	}
 
-	item.use(target);
+	var ret = item.use(target);
+	if(!ret) {
+		res.send("Item cannot be used on target", 500);
+		return;
+	}
+
+	res.send({
+		inventory: inventory,
+		item: item
+	});
 });
 
 router.post('/craft', paperwork.accept({
@@ -84,7 +92,7 @@ router.post('/craft', paperwork.accept({
 	var item = new Item({
 		baseItem: baseItemType,
 		level: Math.randInt(15, 40),
-		quality: ['ordinary', 'rare', 'masterwork'].pick()
+		quality: ['ordinary', 'rare', 'uncommon'].pick()
 	});
 	console.log(item.tooltip);
 	item.move(player.inventory);

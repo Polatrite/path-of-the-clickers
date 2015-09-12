@@ -5,6 +5,18 @@ body {
     font-family: Roboto, Arial, sans-serif;
 }
 
+[ng-click],
+[data-ng-click],
+[x-ng-click] {
+    cursor: url('../../img/hand cursor.png'), default;
+}
+
+[ng-right-click],
+[data-ng-right-click],
+[x-ng-right-click] {
+    cursor: url('../../img/hand cursor.png'), default;
+}
+
 .night-theme {
     background-color: #000000;
     color: #FFFFFF;

@@ -5,6 +5,93 @@ var BaseItems = require(appRoot + '/game-data/BaseItems.js');
 var CurrencyItems = require(appRoot + '/game-data/CurrencyItems.js');
 var AffixData = require(appRoot + '/game-data/AffixData.js');
 
+var StatTooltipDescs = {
+	'maxhp': {
+		short: '+[value] Health',
+		long: '+[value] Health'
+	},
+	'defense': {
+		short: '+[value] Defense',
+		long: '+[value] Defense'
+	},
+	'resist': {
+		short: '+[value] Resistance',
+		long: '+[value] Resistance'
+	},
+	'evade': {
+		short: '+[value] Evasion',
+		long: '+[value] Evasion'
+	},
+	'fortitude': {
+		short: '+[value] Fortitude',
+		long: '+[value] Fortitude vs minor attacks'
+	},
+	'deflection': {
+		short: '+[value] Deflection',
+		long: '+[value] Deflection vs major attacks'
+	},
+	'bane': {
+		short: '+[value] Bane',
+		long: '+[value] Bane for negative effects'
+	},
+	'boon': {
+		short: '+[value] Boon',
+		long: '+[value] Boon for positive effects'
+	},
+	'vigor': {
+		short: '+[value] Vigor',
+		long: '+[value] Vigor for effect enhancement'
+	},
+	'threat': {
+		short: '+[value] Threat',
+		long: '+[value] Threat on attacks'
+	},
+	'attack': {
+		short: '+[value] Attack Power',
+		long: '+[value] Attack Power'
+	},
+	'magic': {
+		short: '+[value] Magic Power',
+		long: '+[value] Magic Power'
+	},
+	'attackSpeed': {
+		short: '[value]% Attack Speed',
+		long: '[value]% Attack Speed'
+	},
+	'cooldownAcceleration': {
+		short: '[value]% Cooldown Acceleration',
+		long: '[value]% increased Cooldown Acceleration'
+	},
+	'critChance': {
+		short: '[value]% Critical Strike Chance',
+		long: '[value]% increased Critical Strike Chance'
+	},
+	'critDamage': {
+		short: '[value]% Critical Strike Damage',
+		long: '[value]% increased Critical Strike Damage'
+	},
+	'accuracy': {
+		short: '[value]% Accuracy',
+		long: '[value]% increased Accuracy'
+	},
+	'defensePenetration': {
+		short: '+[value] Defense Penetration',
+		long: '+[value] Defense Penetration'
+	},
+	'lifesteal': {
+		short: '[value]% Lifesteal',
+		long: '[value]% increased Lifesteal on attacks'
+	},
+	'recovery': {
+		short: '+[value] Recovery of health',
+		long: '+[value] Recovery of health'
+	},
+	'perseverance': {
+		short: '+[value] Perseverance of health',
+		long: '+[value] Perseverance of health'
+	},
+};
+
 var ItemQualities = {
 	'shoddy': {
 		name: 'shoddy',
@@ -29,27 +116,28 @@ var ItemQualities = {
 	'enchanted': {
 		name: 'enchanted',
 		level: 5,
-		primaryAffixes: 5
+		primaryAffixes: 4
 	},
 	'masterwork': {
 		name: 'masterwork',
 		level: 6,
-		primaryAffixes: 6
+		primaryAffixes: 5
 	},
 	'ultimate': {
 		name: 'ultimate',
 		level: 7,
-		primaryAffixes: 7
+		primaryAffixes: 6
 	},
 	'mythic': {
 		name: 'mythic',
 		level: 8,
-		primaryAffixes: 8
+		primaryAffixes: 6
 	},
 	'godly': {
 		name: 'godly',
 		level: 9,
-		primaryAffixes: 9
+		primaryAffixes: 6,
+		legendaryAffixes: 1
 	}
 };
 
@@ -140,7 +228,10 @@ Item.prototype.getTooltip = function() {
 	
 	_.each(this.stats, function(value, stat) {
 		if(value) {
-			self.tooltip += value + " " + changeCase.titleCase(stat) + "<br>";
+			if(StatTooltipDescs[stat] && StatTooltipDescs[stat].long) {
+				self.tooltip += StatTooltipDescs[stat].long.replace('[value]', value) + "<br>";
+			}
+			//self.tooltip += "+" + value + " " + changeCase.titleCase(stat) + "<br>";
 		}
 	});
 
@@ -149,18 +240,6 @@ Item.prototype.getTooltip = function() {
 	});
 	
 	return this.tooltip;
-}
-
-Item.prototype.applyQuality = function(quality, adjustAffixes) {
-	var self = this;
-	self.quality = quality;
-	self._quality = ItemQualities[quality];
-
-	if(adjustAffixes && self.itemType.includes('equipment')) {
-		self.createMissingAffixes();
-	}
-
-	return true;
 }
 
 Item.prototype.createMissingAffixes = function() {
@@ -211,12 +290,39 @@ Item.prototype.clearAffixes = function() {
 }
 
 Item.prototype.applyBaseItem = function(type) {
-	console.log("applyBaseItem() " + type, BaseItems[type]);
 	if(BaseItems[type] === undefined) {
 		return false;
 	}
 		
 	_.extend(this, BaseItems[type]);
+	this.stats = {};
+	_.extend(this.stats, BaseItems[type].stats);
+}
+
+Item.prototype.applyQuality = function(quality, adjustAffixes) {
+	var self = this;
+	self.quality = quality;
+	self._quality = ItemQualities[quality];
+
+	if(adjustAffixes && self.itemType.includes('equipment')) {
+		self.createMissingAffixes();
+	}
+
+	return true;
+}
+
+Item.prototype.changeQualityByLevel = function(diff) {
+	var self = this;
+	var newQualityLevel = self._quality.level + diff;
+	var newQuality = _.find(ItemQualities, function(quality) {
+		if(quality.level === newQualityLevel) {
+			return true;
+		}
+	});
+
+	self.applyQuality(newQuality.name, true);
+
+	return true;
 }
 
 Item.prototype.equipOn = function(minion) {
@@ -259,6 +365,7 @@ Item.prototype.move = function(newLocation, newIndex) {
 	if(this.equipped) {
 		this.unequip();
 	}
+	console.log("Moving " + this.toDebugString() + " from " + this.location + " to " + newLocation);
 	if(this.location) {
 		console.log(strf("Removed [name] [entityType]", this));
 		$E(this.location).removeItem(this);
@@ -267,13 +374,13 @@ Item.prototype.move = function(newLocation, newIndex) {
 	if(newLocation === null) {
 		this.location = null;
 	}
-	if(newLocation.entityType === 'Player') {
+	else if(newLocation.entityType === 'Player') {
 		var player = newLocation;
 		console.log(strf("Added [name] [entityType]", this));
 		player.inventory.addItem(this, newIndex);
 		console.log(this.toDebugString() + " moved to " + player.toDebugString() + ".");
 	}
-	if(newLocation.entityType === 'Inventory') {
+	else if(newLocation.entityType === 'Inventory') {
 		var inventory = newLocation;
 		inventory.addItem(this, newIndex);
 		console.log(this.toDebugString() + " moved to " + inventory.toDebugString() + ".");
@@ -306,8 +413,7 @@ Item.prototype.addStats = function(stats) {
 
 Item.prototype.removeStats = function(stats) {
 	var item = this;
-	console.log("REMOVESTATS", stats);
-	console.log(item);
+	console.log("Removing stats from " + item.toDebugString(), stats);
 	_.each(stats, function(value, stat) {
 		if(value == 0) { return; }
 		if(stat in item.stats) {

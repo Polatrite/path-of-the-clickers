@@ -92,8 +92,8 @@ if (!Math.randInt) {
 	}
 }
 
-if (!Math.randInt) {
-	Math.randInt = function(min, max) {
+if (!Math.randDec) {
+	Math.randDec = function(min, max) {
 		if(!min) min = 0;
 		if(!max) max = 1;
 		return Math.random() * (max - min) + min;

@@ -161,7 +161,7 @@ AffixData.stats.hp = new AffixGenerator({
 	levelMax: 80,
 	statGens: [
 		new StatGenerator({
-			stat: "hp",
+			stat: "maxhp",
 			numTiers: 14,
 			minLowest: defenseMin*3,
 			maxLowest: defenseMax*3,

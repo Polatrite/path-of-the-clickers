@@ -21,9 +21,7 @@ Inventory.prototype.addItem = function(item, newIndex) {
 		return false;
 	}
 	if(newIndex === undefined || newIndex == -1) {
-		console.log("Get empty slot");
 		newIndex = this.getEmptySlot();
-		console.log("Get empty slot", newIndex);
 	}
 	if(newIndex == -1) {
 		console.error("Inventory is full.");

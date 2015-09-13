@@ -68,7 +68,8 @@ router.post('/use', paperwork.accept({
 
 	res.send({
 		inventory: inventory,
-		item: item
+		item: item,
+		target: target
 	});
 });
 

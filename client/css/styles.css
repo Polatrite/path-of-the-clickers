@@ -50,6 +50,10 @@ h2 {
     margin-bottom: 2px;
 }
 
+.output {
+    height: 15em;
+}
+
 .upgrade-item {
     background-color: #FFFFFF;
     color: #000000;
@@ -125,86 +129,6 @@ h2 {
 
 .text-highlight-color {
     color: #A1D0FF;
-}
-
-.color-tools {
-    color: white;
-    background-color: #7D6228;
-}
-
-.color-wood {
-    color: white;
-    background-color: #A65E00;
-}
-
-.color-forest {
-    color: white;
-    background-color: #10630C;
-}
-.color-forest-light {
-    background-color: #E7EFE7;
-}
-
-.color-exp {
-    background-color: #63ADDB;
-}
-
-.color-mountain {
-    background-color: #EDC872;
-}
-.color-mountain-light {
-    background-color: #FBF4E3;
-}
-
-.color-stone {
-    color: white;
-    background-color: #696969;
-}
-
-.color-ore {
-    color: white;
-    background-color: #B87E58;
-}
-
-.color-sales {
-    background-color: #A1D0FF;
-}
-
-.color-rubber {
-    color: white;
-    background-color: #404040;
-}
-
-.color-coral {
-    color: white;
-    background-color: purple;
-}
-
-.color-food {
-    background-color: #4BD68C;
-}
-
-.color-ocean {
-    background-color: #61B1D4;
-}
-.color-ocean-light {
-    background-color: #DFEFF6;
-}
-
-.color-prairie {
-    background-color: #CED45B;
-}
-.color-prairie-light {
-    background-color: #F0F2CE;
-}
-
-.color-oil {
-    color: white;
-    background-color: #262621;
-}
-
-.color-livestock {
-    background-color: #CFCFCF;
 }
 
 

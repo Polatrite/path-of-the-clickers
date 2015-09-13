@@ -58,6 +58,11 @@ window.addEventListener('load', function() {
 	<button type="button" class="btn btn-default" ng-click="clickDebug3()">Debug 3</button>
 </div>
 
+<div class="output">
+	<div class="output-line" ng-repeat="line in output track by $index" ng-bind-html="line">
+	</div>
+</div>
+
 <div class="row row-margin">
     <!-- INVENTORY, SKILLS, CURRENCY -->
 	<div class="col-md-3">
@@ -65,22 +70,14 @@ window.addEventListener('load', function() {
 
 		<div>
 		    <ng-inventory inventory="inventory" rows="5" columns="8"></ng-inventory>
-			<button type="button" class="btn btn-default" ng-click="craft()" tooltip tooltip-html="tooltipFunc()" tooltip-placement="right">Craft</button>
+			<button type="button" class="btn btn-default" ng-click="craft()">Craft</button>
 		</div>
 	</div>
 
 	<!-- MINIONS -->
 	<div class="col-md-3">
 		<div class="row">
-			<br>
-			<br>
-			<br>
-			<br>
-			<br>
-			<br>
-			<br>
-			<br>
-		    <h2 tooltip tooltip-html="tooltipFunc()">Minions</h2>
+		    <h2>Minions</h2>
 		    
 			<div class="col-md-12" ng-repeat="minion in player.minions">
 				<h2>{{ minion.name }}</h2>

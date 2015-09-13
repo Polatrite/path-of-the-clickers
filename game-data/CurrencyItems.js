@@ -130,6 +130,23 @@ var CurrencyItems = {
 		spriteX: 1,
 		spriteY: 15,
 	},
+	'PauperOrb': {
+		name: 'Pauper Orb',
+		description: "Randomize a T1-T3 affix on an item.",
+
+		itemType: ['item', 'scroll'],
+		quality: 'ordinary',
+
+		usable: true,
+		useTargets: ['equipment'],
+		useAction: function(target) {
+			
+		},
+		consumeOnUse: true,
+		
+		spriteX: 2,
+		spriteY: 15,
+	},
 }
 
 

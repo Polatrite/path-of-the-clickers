@@ -107,10 +107,18 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		player: null,
 		inventory: new UiInventory(null, 40, [], [], [], scope.itemMovedEvent),
 		loggedIn: false,
-		debugObjects: []
+		debugObjects: [],
+		output: []
 	});
 
 	angular.extend(scope, {
+		logOutput: function(msg) {
+			scope.output.push(msg + "<br>");
+			if(scope.output.length > 10) {
+				scope.output = scope.output.slice(1);
+			}
+		},
+
 		openLoginModal: function() {
 			var loginModal = $modal.open({
 				templateUrl: 'login.html',
@@ -130,6 +138,7 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 			scope.player = null;
 			scope.loadInventory(player.inventory);
 			scope.player = player;
+			scope.logOutput("Loaded player " + player.username);
 		},
 		
 		loadInventory: function(inventory) {
@@ -150,10 +159,12 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 							targetUid: item.uid
 						}).then(function(res) {
 							//uiItem.updateItem(res.data.item);
+							scope.logOutput("Used " + res.data.item.name + " on " + res.data.target.name);
 							if(res.data.inventory) {
 								scope.loadInventory(res.data.inventory);
 							}
 						}, function(err) {
+							scope.logOutput(err.data);
 							console.log("/item/use error", err);
 						});
 					}
@@ -161,6 +172,7 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 				uiItem.rightClick = function() {
 					scope.rightClickItem = uiItem;
 					console.log("Right-click!", item);
+					scope.logOutput("Selected " + uiItem.name + " on the mouse cursor");
 				}
 				console.log("Wrapped UiItem", uiItem);
 				scope.inventory.addItem(uiItem, item.locationIndex, true);
@@ -188,7 +200,7 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 				toUid: to,
 				toIndex: toIndex
 			}).then(function(res) {
-				
+				scope.logOutput("Moved " + item);
 			}, function(err) {
 				if(err.status === 660) {
 					scope.resyncPlayer();
@@ -202,6 +214,7 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 			$http.post('/player/create')
 				.then(function(res) {
 					console.log('Create call:', res);
+					scope.logOutput("Created a new account");
 					Player.instance = res.data;
 					scope.loadPlayer(res.data);
 					scope.$watch('inventory.items', function() {
@@ -244,6 +257,7 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 				if(res.data.inventory) {
 					scope.loadInventory(res.data.inventory);
 					console.log("Reloaded inventory");
+					scope.logOutput("Crafted " + res.data.item.name);
 				}
 			}, function(err) {
 				console.error(err);

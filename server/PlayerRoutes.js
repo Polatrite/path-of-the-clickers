@@ -4,6 +4,7 @@ var paperwork = require('paperwork');
 var UidManager = require(appRoot + '/shared/UidManager.js');
 var PlayerManager = require(appRoot + '/server/PlayerManager.js');
 var Item = require(appRoot + '/shared/Item.js');
+var Minion = require(appRoot + '/shared/Minion.js');
 
 var router = express.Router();
 
@@ -18,6 +19,40 @@ router.post('/create', function(req, res) {
 	var player = PlayerManager.create();
 	req.session.playerUid = player.uid;
 	console.log("SESSION: ", req.session);
+	
+    player.minions = [
+        new Minion({
+            name: "Angel Warrior",
+            description: "She's an angel warrior, obviously.",
+            image: './img/minions/angel-warrior-2.png',
+            equipment: {
+    			weapon: null,
+    			trinket: null,
+    			amulet: null,
+            }
+        }),
+        new Minion({
+            name: "Baby Chimera",
+            description: "It's all fun and games until somebody is on fire.",
+            image: './img/minions/chimera-1.png',
+            equipment: {
+    			weapon: null,
+    			trinket: null,
+    			amulet: null,
+            }
+        }),
+        new Minion({
+            name: "Wise Buddy",
+            description: "A frog.",
+            image: './img/minions/frog-1.png',
+            equipment: {
+    			weapon: null,
+    			trinket: null,
+    			amulet: null,
+            }
+        })
+    ],
+
 	res.send(player.clean());
 });
 

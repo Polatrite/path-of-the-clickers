@@ -1,3 +1,4 @@
+/* global appRoot strf _ */
 var changeCase = require('change-case')
 
 var uidManager = require(appRoot + '/shared/UidManager.js');
@@ -226,6 +227,8 @@ Item.prototype.getTooltip = function() {
 		this.tooltip += this.description + "<br>";
 	}
 	
+	this.tooltip += "<hr>";
+	
 	_.each(this.stats, function(value, stat) {
 		if(value) {
 			if(StatTooltipDescs[stat] && StatTooltipDescs[stat].long) {
@@ -234,6 +237,8 @@ Item.prototype.getTooltip = function() {
 			//self.tooltip += "+" + value + " " + changeCase.titleCase(stat) + "<br>";
 		}
 	});
+
+	this.tooltip += "<hr>";
 
 	_.each(this.affixes.primary, function(affix) {
 		self.tooltip += affix.toDisplayString("html");

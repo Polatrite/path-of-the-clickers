@@ -109,4 +109,15 @@ Minion.prototype.removeStats = function(stats, myStats) {
 	return true;
 }
 
+Minion.prototype.itemEquipCallback = function(inventory, item, action) {
+	var minion = $E(inventory.location);
+	if(action == 'added') {
+		console.log("CB Item " + item.toDebugString() + " added to inventory " + minion.name);
+		// add stats
+	} else if (action == 'removed') {
+		console.log("CB Item " + item.toDebugString() + " removed from inventory " + minion.name);
+		// remove stats
+	}
+}
+
 module.exports = Minion;

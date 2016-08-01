@@ -4,6 +4,7 @@ var paperwork = require('paperwork');
 var UidManager = require(appRoot + '/shared/UidManager.js');
 var PlayerManager = require(appRoot + '/server/PlayerManager.js');
 var Item = require(appRoot + '/shared/Item.js');
+var Inventory = require(appRoot + '/shared/Inventory.js');
 var Minion = require(appRoot + '/shared/Minion.js');
 
 var router = express.Router();
@@ -26,9 +27,9 @@ router.post('/create', function(req, res) {
             description: "She's an angel warrior, obviously.",
             image: './img/minions/angel-warrior-2.png',
             equipment: {
-    			weapon: null,
-    			trinket: null,
-    			amulet: null,
+    			weapon: new Inventory(1, player, { whitelist: ['equipment', 'weapon']}),
+    			trinket: new Inventory(1, player, { whitelist: ['equipment', 'trinket']}),
+    			amulet: new Inventory(1, player, { whitelist: ['equipment', 'amulet']}),
             }
         }),
         new Minion({
@@ -36,9 +37,9 @@ router.post('/create', function(req, res) {
             description: "It's all fun and games until somebody is on fire.",
             image: './img/minions/chimera-1.png',
             equipment: {
-    			weapon: null,
-    			trinket: null,
-    			amulet: null,
+    			weapon: new Inventory(1, player, { whitelist: ['equipment', 'weapon']}),
+    			trinket: new Inventory(1, player, { whitelist: ['equipment', 'trinket']}),
+    			amulet: new Inventory(1, player, { whitelist: ['equipment', 'amulet']}),
             }
         }),
         new Minion({
@@ -46,12 +47,20 @@ router.post('/create', function(req, res) {
             description: "A frog.",
             image: './img/minions/frog-1.png',
             equipment: {
-    			weapon: null,
-    			trinket: null,
-    			amulet: null,
+    			weapon: new Inventory(1, player, { whitelist: ['equipment', 'weapon']}),
+    			trinket: new Inventory(1, player, { whitelist: ['equipment', 'trinket']}),
+    			amulet: new Inventory(1, player, { whitelist: ['equipment', 'amulet']}),
             }
         })
-    ],
+    ];
+    
+    _.each(player.minions, function(minion) {
+    	_.each(minion.equipment, function(inventory) {
+    		inventory.itemMovedCallback = minion.itemEquipCallback;
+    		inventory.location = minion.uid;
+    	});
+    });
+    
 
 	res.send(player.clean());
 });

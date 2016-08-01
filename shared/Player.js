@@ -12,7 +12,11 @@ var Player = function(conf) {
 		money: 0
 	});
 	
-	this.inventory = new Inventory(40, this);
+	this.inventory = new Inventory(40, this, {
+		itemMovedCallback: function(inventory, item, action) {
+			
+		}
+	});
 
 	_.extend(this, conf);
 }

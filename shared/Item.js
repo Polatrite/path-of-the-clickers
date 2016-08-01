@@ -1,4 +1,4 @@
-/* global appRoot strf _ */
+/* global appRoot strf _ $E */
 var changeCase = require('change-case')
 
 var uidManager = require(appRoot + '/shared/UidManager.js');
@@ -387,6 +387,7 @@ Item.prototype.move = function(newLocation, newIndex) {
 	}
 	else if(newLocation.entityType === 'Inventory') {
 		var inventory = newLocation;
+		console.log(strf("Added [name] [entityType]", this));
 		inventory.addItem(this, newIndex);
 		console.log(this.toDebugString() + " moved to " + inventory.toDebugString() + ".");
 	}
@@ -406,10 +407,17 @@ Item.prototype.addStats = function(stats) {
 		}
 	});
 	
-	var minion = $E(this.location, 'Minion');
+	var minion;
+	var inventory = $E(this.location, 'Inventory');
+	if(inventory) {
+		minion = $E(inventory.location, 'Minion');
+	} else {
+		minion = $E(this.location, 'Minion');
+	}
 	if(minion) {
 		minion.addStats(stats, minion.permanentStats);
 	}
+	
 
 	this.getTooltip();
 
@@ -430,7 +438,13 @@ Item.prototype.removeStats = function(stats) {
 		}
 	});
 
-	var minion = $E(this.location, 'Minion');
+	var minion;
+	var inventory = $E(this.location, 'Inventory');
+	if(inventory) {
+		minion = $E(inventory.location, 'Minion');
+	} else {
+		minion = $E(this.location, 'Minion');
+	}
 	if(minion) {
 		minion.removeStats(stats, minion.permanentStats);
 	}

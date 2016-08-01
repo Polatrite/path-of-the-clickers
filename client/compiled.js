@@ -53700,6 +53700,7 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 		loadPlayer: function(player) {
 			scope.player = null;
 			scope.loadInventory(player.inventory);
+			scope.loadMinionInventories(player.minions);
 			scope.player = player;
 			scope.logOutput("Loaded player " + player.username);
 		},
@@ -53709,39 +53710,64 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 			scope.inventory.clear();
 			scope.inventory.inventoryModel = inventory;
 			_.each(inventory.items, function(item) {
-				if(!item) return;
-				var uiItem = new UiItem(item.name, item);
-				uiItem.click = function(event) {
-					console.log("Click!", item);
-					if(scope.rightClickItem) {
-						var originUid = scope.rightClickItem.serverItem.uid;
-						scope.rightClickItem = null;
-						console.log("Right-click is on the cursor, let's apply it!");
-						$http.post('/item/use', {
-							itemUid: originUid,
-							targetUid: item.uid
-						}).then(function(res) {
-							//uiItem.updateItem(res.data.item);
-							scope.logOutput("Used " + res.data.item.name + " on " + res.data.target.name);
-							if(res.data.inventory) {
-								scope.loadInventory(res.data.inventory);
-							}
-						}, function(err) {
-							scope.logOutput(err.data);
-							console.log("/item/use error", err);
-						});
-					}
-				}
-				uiItem.rightClick = function() {
-					scope.rightClickItem = uiItem;
-					console.log("Right-click!", item);
-					scope.logOutput("Selected " + uiItem.name + " on the mouse cursor");
-				}
-				console.log("Wrapped UiItem", uiItem);
-				scope.inventory.addItem(uiItem, item.locationIndex, true);
+				scope.bindItem(scope.inventory, item);
 			});
 			scope.inventory.changedCallback = scope.itemMovedEvent;
 			console.log("Inventory after ", scope.inventory);
+		},
+		
+		bindItem: function(inventory, item) {
+			if(!item)
+				return;
+			console.log("Binding to ", inventory);
+			var uiItem = new UiItem(item.name, item);
+			uiItem.click = scope.itemClickFunc;
+			uiItem.rightClick = scope.itemRightClickFunc;
+			console.log("Wrapped UiItem", uiItem);
+			inventory.addItem(uiItem, item.locationIndex, true);
+		},
+		
+		loadMinionInventories: function(minions) {
+			console.log("Loading minion inventories");
+			_.each(minions, function(minion) {
+				console.log(minion);
+				_.each(minion.equipment, function(inventory, invName) {
+					var inventoryModel = inventory;
+					minion.equipment[invName] = new UiInventory(inventoryModel, 1, inventoryModel.whitelist, inventoryModel.blacklist, [], scope.itemMovedEvent);
+					_.each(inventoryModel.items, function(item) {
+						scope.bindItem(minion.equipment[invName], item);
+					});
+				});
+			});
+		},
+		
+		itemClickFunc: function(event) {
+			console.log("THIS: ", this);
+			console.log("Click!", this.serverItem);
+			if(scope.rightClickItem) {
+				var originUid = scope.rightClickItem.serverItem.uid;
+				scope.rightClickItem = null;
+				console.log("Right-click is on the cursor, let's apply it!");
+				$http.post('/item/use', {
+					itemUid: originUid,
+					targetUid: this.serverItem.uid
+				}).then(function(res) {
+					//uiItem.updateItem(res.data.item);
+					scope.logOutput("Used " + res.data.item.name + " on " + res.data.target.name);
+					if(res.data.inventory) {
+						scope.loadInventory(res.data.inventory);
+					}
+				}, function(err) {
+					scope.logOutput(err.data);
+					console.log("/item/use error", err);
+				});
+			}
+		},
+		
+		itemRightClickFunc: function() {
+			scope.rightClickItem = this;
+			console.log("Right-click!", this.serverItem);
+			scope.logOutput("Selected " + this.name + " on the mouse cursor");
 		},
 		
 		resyncPlayer: function() {
@@ -53851,6 +53877,8 @@ app.controller("MainCtrl", ['$scope', 'socket', '$http', '$modal', 'Player', fun
 
 	scope.start();
 }]);
+
+
 
 app.controller("ChatCtrl", ['$scope', 'socket', function(scope, socket) {
     scope.messages = [];
